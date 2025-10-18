@@ -47,9 +47,12 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims;
 
+  const isViewListingsRoute = request.nextUrl.pathname.startsWith("/view_listings");
+
   if (
     request.nextUrl.pathname !== "/" &&
     !user &&
+    !isViewListingsRoute &&
     !request.nextUrl.pathname.startsWith("/login") &&
     !request.nextUrl.pathname.startsWith("/auth")
   ) {
