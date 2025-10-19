@@ -3,7 +3,7 @@ import Link from "next/link";
 import Search from "./search"
 
 import { createClient } from "@/lib/supabase/server";
-import { Form } from "react-router-dom";
+
 
 type Listing = {
   listing_id: number | string;
@@ -81,15 +81,15 @@ export const dynamic = "force-dynamic";
 
 export default async function ViewListingsPage({ searchParams }: { searchParams: { search?: string } }) {
   const supabase = await createClient();
-  const searchTerm = searchParams.search ?? ''
+  const {search} = (await searchParams || "")
 
   let query = supabase
     .from("listing")
     .select("*")
     .order("created_at", { ascending: false });
 
-  if (searchTerm) {
-    query = query.textSearch('fts', searchTerm)
+  if (search) {
+    query = query.textSearch('fts', search)
   }
 
   const { data, error } = await query;
