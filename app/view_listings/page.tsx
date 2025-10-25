@@ -84,7 +84,7 @@ export default async function ViewListingsPage({ searchParams }: { searchParams:
   const reservedParams = await searchParams;
   const searchTerm = reservedParams.search ?? ''
 
-  let query = supabase
+  const query = supabase
     .from("listing")
     .select("*")
     .order("created_at", { ascending: false });
