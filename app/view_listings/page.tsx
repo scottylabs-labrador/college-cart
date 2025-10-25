@@ -81,19 +81,27 @@ export const dynamic = "force-dynamic";
 
 export default async function ViewListingsPage({ searchParams }: { searchParams: { search?: string } }) {
   const supabase = await createClient();
-  const searchTerm = searchParams.search ?? ''
+  const reservedParams = await searchParams;
+  const searchTerm = reservedParams.search ?? ''
 
   let query = supabase
     .from("listing")
     .select("*")
     .order("created_at", { ascending: false });
 
-  if (searchTerm) {
-    query = query.textSearch('fts', searchTerm)
+
+  let func;
+
+  if (!searchTerm) {
+    func = await query
+  }
+  else{
+    func = await supabase.rpc('fuzzy_search_listings', { search: searchTerm });
   }
 
-  const { data, error } = await query;
-  const listings = (data ?? []) as Listing[];
+  const { data, error } = func;
+  const listings  = (data ?? []) as Listing[];
+
 
   return (
     <main className="min-h-screen bg-background text-foreground">
