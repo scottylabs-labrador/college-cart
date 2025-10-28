@@ -6,7 +6,7 @@ export async function POST(request: Request) {
   const formData = await request.formData()
 
   const title = formData.get('title') as string
-  const seller_id = 0 // change after implementing auth
+  const seller_id = formData.get('user_id') as string
   const description = formData.get('description') as string
   const price_cents = parseInt(formData.get('price_cents') as string)
   const condition = formData.get('condition') as string
