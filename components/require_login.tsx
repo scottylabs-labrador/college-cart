@@ -2,11 +2,10 @@ import { SignedOut, SignInButton, SignUpButton } from "@clerk/nextjs";
 
  
 export default function RequireLogin() {
-    (
+    return (
       <main className="min-h-[60vh] flex items-center justify-center px-4">
         <div className="max-w-xl w-full bg-white/80 dark:bg-slate-900/70 backdrop-blur-sm border border-gray-200 dark:border-slate-700 rounded-lg p-8 text-center">
           <h2 className="text-xl font-semibold mb-2">Sign in to use this feature</h2>
-          <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">You need an account to add a listing.</p>
           <div className="flex items-center justify-center gap-3">
             <SignedOut>
               <SignInButton>
