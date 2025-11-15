@@ -12,7 +12,7 @@ export async function POST(request: Request) {
   const condition = formData.get('condition') as string
   const quantityValue = formData.get('quantity') as string
   const status = formData.get('status') as string
-  const location = formData.get('location') as string
+  const location = formData.get('location') as string  
   const imageEntries = formData.getAll('images')
   const imageFiles = imageEntries.filter(
     (entry): entry is File => entry instanceof File && entry.size > 0

@@ -23,11 +23,14 @@ import {
 import Link from 'next/link';
 import Image from 'next/image';
 import RequireLogin from '@/components/require_login';
+import { useRouter } from 'next/navigation';
 
 export default function PostItemPage() {
   const { isLoaded, userId } = useAuth();
+  const router = useRouter();
   const [category, setCategory] = useState('');
-  const [brand, setBrand] = useState('');
+  const [price, setPrice] = useState(0.0);
+  const [quantity, setQuantity] = useState(0);
   const [condition, setCondition] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -52,11 +55,33 @@ export default function PostItemPage() {
     setImageFile(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async(e: React.FormEvent) =>{
     e.preventDefault();
-    // Handle form submission here
-    console.log({ category, brand, condition, title, description, imageFile });
-    // You can add your API call here
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("description", description);
+    formData.append("price_cents", Math.round(price * 100).toString());
+    formData.append("condition", condition);
+    formData.append("quantity", Math.round(quantity).toString());
+    formData.append("status", "active"); 
+    formData.append("user_id", userId || "");
+    if (imageFile) {
+      formData.append("images", imageFile);
+    }
+
+    // Call the server action
+    const response = await fetch("/add_listing/action", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      alert("Failed to add listing. Please try again.");
+      return;
+    }
+    alert("Listing added successfully!");
+    // Optionally, redirect or clear the form here
+    router.push('/');
   };
 
   if (!isLoaded || !userId) {
@@ -171,6 +196,24 @@ export default function PostItemPage() {
                 <CardContent className="p-6 space-y-6">
                   <h2 className="text-2xl font-semibold mb-6">Product Info</h2>
 
+                  {/* Title Field */}
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="title"
+                      className="text-sm font-medium text-foreground"
+                    >
+                      Title
+                    </label>
+                    <Input
+                      id="title"
+                      type="text"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="Enter item title"
+                      className="w-full"
+                    />
+                  </div>
+
                   {/* Category Field */}
                   <div className="space-y-2">
                     <label
@@ -189,20 +232,39 @@ export default function PostItemPage() {
                     />
                   </div>
 
-                  {/* Brand Field */}
+                  {/* Quantity Field */}
                   <div className="space-y-2">
                     <label
-                      htmlFor="brand"
+                      htmlFor="quantity"
                       className="text-sm font-medium text-foreground"
                     >
-                      Brand
+                      Quantity
                     </label>
                     <Input
-                      id="brand"
-                      type="text"
-                      value={brand}
-                      onChange={(e) => setBrand(e.target.value)}
-                      placeholder="e.g., Apple, Nike, IKEA"
+                      id="quantity"
+                      type="number"
+                      value={quantity}
+                      onChange={(e) => setQuantity(Number(e.target.value))}
+                      placeholder="e.g., 1, 2, 3"
+                      className="w-full"
+                    />
+                  </div>
+
+                  {/* Price Field */}
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="price"
+                      className="text-sm font-medium text-foreground"
+                    >
+                      Price
+                    </label>
+                    <Input
+                      id="price"
+                      type="number"
+                      step="0.01"
+                      value={price}
+                      onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
+                      placeholder="e.g., 19.99"
                       className="w-full"
                     />
                   </div>
@@ -220,31 +282,13 @@ export default function PostItemPage() {
                         <SelectValue placeholder="Select condition" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="New">New</SelectItem>
-                        <SelectItem value="Like New">Like New</SelectItem>
-                        <SelectItem value="Good">Good</SelectItem>
-                        <SelectItem value="Fair">Fair</SelectItem>
-                        <SelectItem value="Poor">Poor</SelectItem>
+                        <SelectItem value="new">New</SelectItem>
+                        <SelectItem value="like_new">Like New</SelectItem>
+                        <SelectItem value="good">Good</SelectItem>
+                        <SelectItem value="fair">Fair</SelectItem>
+                        <SelectItem value="poor">Poor</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-
-                  {/* Title Field */}
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="title"
-                      className="text-sm font-medium text-foreground"
-                    >
-                      Title
-                    </label>
-                    <Input
-                      id="title"
-                      type="text"
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      placeholder="Enter item title"
-                      className="w-full"
-                    />
                   </div>
 
                   {/* Description Field */}
