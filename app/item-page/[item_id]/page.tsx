@@ -136,7 +136,19 @@ export default function ItemPage() {
 
               {/* Action Buttons */}
               <div className="flex items-center gap-3 mb-6">
-                <Button size="lg" className="flex-1">
+                <Button 
+                  size="lg" 
+                  className="flex-1 border-0 text-white"
+                  style={{
+                    background: 'linear-gradient(to right, #4a2db8, #a78bfa)',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'linear-gradient(to right, #3d2599, #9d7ff0)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'linear-gradient(to right, #4a2db8, #a78bfa)';
+                  }}
+                >
                   Make Offer
                 </Button>
                 <Button
@@ -212,7 +224,20 @@ export default function ItemPage() {
                       <Button variant="outline">Sign In</Button>
                     </SignInButton>
                     <SignUpButton mode="modal">
-                      <Button>Sign Up</Button>
+                      <Button 
+                        className="border-0 text-white"
+                        style={{
+                          background: 'linear-gradient(to right, #4a2db8, #a78bfa)',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'linear-gradient(to right, #3d2599, #9d7ff0)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'linear-gradient(to right, #4a2db8, #a78bfa)';
+                        }}
+                      >
+                        Sign Up
+                      </Button>
                     </SignUpButton>
                   </div>
                 </div>
@@ -229,7 +254,21 @@ export default function ItemPage() {
                         className="w-full"
                       />
                       <div className="flex justify-end mt-2">
-                        <Button size="sm">Post Comment</Button>
+                        <Button 
+                          size="sm" 
+                          className="border-0 text-white"
+                          style={{
+                            background: 'linear-gradient(to right, #4a2db8, #a78bfa)',
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'linear-gradient(to right, #3d2599, #9d7ff0)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'linear-gradient(to right, #4a2db8, #a78bfa)';
+                          }}
+                        >
+                          Post Comment
+                        </Button>
                       </div>
                     </div>
                   </div>
