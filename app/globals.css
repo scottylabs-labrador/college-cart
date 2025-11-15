@@ -66,3 +66,34 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Disable system highlight color on select components */
+[data-radix-select-trigger],
+[data-radix-select-trigger] *,
+[data-radix-select-item],
+[data-radix-select-item] * {
+  -webkit-tap-highlight-color: transparent !important;
+  -webkit-touch-callout: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  -webkit-user-drag: none !important;
+}
+
+/* Disable text selection highlighting */
+[data-radix-select-trigger]::selection,
+[data-radix-select-trigger] *::selection,
+[data-radix-select-item]::selection,
+[data-radix-select-item] *::selection {
+  background: transparent !important;
+  color: inherit !important;
+}
+
+[data-radix-select-trigger]::-moz-selection,
+[data-radix-select-trigger] *::-moz-selection,
+[data-radix-select-item]::-moz-selection,
+[data-radix-select-item] *::-moz-selection {
+  background: transparent !important;
+  color: inherit !important;
+}

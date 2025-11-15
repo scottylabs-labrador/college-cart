@@ -233,7 +233,7 @@ export default function PostItemPage() {
                       <SelectTrigger id="condition" className="w-full">
                         <SelectValue placeholder="Select condition" />
                       </SelectTrigger>
-                      <SelectContent position="popper" className="w-[var(--radix-select-trigger-width)]">
+                      <SelectContent>
                         <SelectItem value="New">New</SelectItem>
                         <SelectItem value="Like New">Like New</SelectItem>
                         <SelectItem value="Good">Good</SelectItem>
