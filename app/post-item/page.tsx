@@ -122,20 +122,6 @@ export default function PostItemPage() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        {/* Page Title */}
-        <div className="flex items-center gap-3 mb-8">
-          <Link href="/" className="flex items-center gap-2">
-            <Image
-              src="/logo-blue.png"
-              alt="CollegeCart Logo"
-              width={40}
-              height={40}
-              className="object-contain rounded-full"
-            />
-          </Link>
-          <h1 className="text-3xl font-bold">List an item</h1>
-        </div>
-
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Left Column - Image Upload Section */}
