@@ -24,6 +24,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import RequireLogin from '@/components/require_login';
 
+const MAX_IMAGES = 10;
+
 export default function PostItemPage() {
   const { isLoaded, userId } = useAuth();
   const [category, setCategory] = useState('');
@@ -31,31 +33,50 @@ export default function PostItemPage() {
   const [condition, setCondition] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreviews, setImagePreviews] = useState<Array<{ url: string; file: File }>>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onload = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const fileArray = Array.from(files);
+      const remainingSlots = MAX_IMAGES - imagePreviews.length;
+      
+      if (remainingSlots <= 0) {
+        e.target.value = '';
+        return;
+      }
+      
+      // Only process files up to the remaining slots
+      const filesToProcess = fileArray.slice(0, remainingSlots);
+      const newImages: Array<{ url: string; file: File }> = [];
+      let loadedCount = 0;
+      
+      filesToProcess.forEach((file) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          newImages.push({ url: reader.result as string, file });
+          loadedCount++;
+          if (loadedCount === filesToProcess.length) {
+            setImagePreviews((prev) => [...prev, ...newImages]);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
     }
+    // Reset input so the same file can be selected again
+    e.target.value = '';
   };
 
-  const handleRemoveImage = () => {
-    setImagePreview(null);
-    setImageFile(null);
+  const handleRemoveImage = (index: number) => {
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Handle form submission here
-    console.log({ category, brand, condition, title, description, imageFile });
+    const imageFiles = imagePreviews.map((img) => img.file);
+    console.log({ category, brand, condition, title, description, imageFiles });
     // You can add your API call here
   };
 
@@ -127,40 +148,68 @@ export default function PostItemPage() {
             {/* Left Column - Image Upload Section */}
             <div className="w-full">
               <Card className="overflow-hidden">
-                <CardContent className="p-8">
-                  <div className="aspect-square bg-muted rounded-lg flex flex-col items-center justify-center border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 transition-colors relative">
-                    {imagePreview ? (
-                      <>
-                        <Image
-                          src={imagePreview}
-                          alt="Preview"
-                          fill
-                          className="object-cover rounded-lg"
-                        />
-                        <button
-                          type="button"
-                          onClick={handleRemoveImage}
-                          className="absolute top-2 right-2 z-10 bg-white/90 hover:bg-white rounded-full p-2 shadow-lg transition-colors"
-                          aria-label="Remove image"
-                        >
-                          <X className="w-4 h-4 text-foreground" />
-                        </button>
-                      </>
-                    ) : (
+                <CardContent className="p-8 relative">
+                  {imagePreviews.length > 0 ? (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        {imagePreviews.map((image, index) => (
+                          <div
+                            key={index}
+                            className="aspect-square bg-muted rounded-lg relative overflow-hidden border border-muted-foreground/25"
+                          >
+                            <Image
+                              src={image.url}
+                              alt={`Preview ${index + 1}`}
+                              fill
+                              className="object-cover rounded-lg"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveImage(index)}
+                              className="absolute top-2 right-2 z-10 bg-white/90 hover:bg-white rounded-full p-2 shadow-lg transition-colors"
+                              aria-label="Remove image"
+                            >
+                              <X className="w-4 h-4 text-foreground" />
+                            </button>
+                          </div>
+                        ))}
+                        {imagePreviews.length < MAX_IMAGES && (
+                          <label className="aspect-square bg-muted rounded-lg flex flex-col items-center justify-center border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 transition-colors cursor-pointer">
+                            <Upload className="w-8 h-8 text-muted-foreground mb-2" />
+                            <span className="text-muted-foreground font-medium text-sm">
+                              Add more
+                            </span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              multiple
+                              onChange={handleImageChange}
+                              className="hidden"
+                            />
+                          </label>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="aspect-square bg-muted rounded-lg flex flex-col items-center justify-center border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 transition-colors relative">
                       <label className="flex flex-col items-center justify-center cursor-pointer w-full h-full">
                         <Upload className="w-12 h-12 text-muted-foreground mb-4" />
                         <span className="text-muted-foreground font-medium">
-                          upload photo
+                          upload photos
                         </span>
                         <input
                           type="file"
                           accept="image/*"
+                          multiple
                           onChange={handleImageChange}
                           className="hidden"
                         />
                       </label>
-                    )}
-                  </div>
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground absolute bottom-10 left-4">
+                    ( Picture Number Limit: 10 )
+                  </p>
                 </CardContent>
               </Card>
             </div>
