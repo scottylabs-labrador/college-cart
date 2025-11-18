@@ -92,7 +92,7 @@ export default function PostItemPage() {
     });
 
     // Call the server action
-    const response = await fetch("/add_listing/action", {
+    const response = await fetch("/post-item/action", {
       method: "POST",
       body: formData,
     });
@@ -101,9 +101,14 @@ export default function PostItemPage() {
       alert("Failed to add listing. Please try again.");
       return;
     }
-    alert("Listing added successfully!");
-    // Optionally, redirect or clear the form here
-    router.push('/');
+
+    const result = await response.json();
+    if (result.success && result.listing_id) {
+      // Redirect to the item listing page
+      router.push(`/item-page/${result.listing_id}`);
+    } else {
+      alert("Listing added but failed to get item ID. Please try again.");
+    }
   };
 
   if (!isLoaded || !userId) {
