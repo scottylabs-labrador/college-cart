@@ -77,6 +77,37 @@ export default function PostItemPage() {
 
   const handleSubmit = async(e: React.FormEvent) =>{
     e.preventDefault();
+    
+    // Frontend validation
+    if (!title.trim()) {
+      alert("Please enter a title for your item.");
+      return;
+    }
+    if (!description.trim()) {
+      alert("Please enter a description for your item.");
+      return;
+    }
+    if (price <= 0) {
+      alert("Please enter a valid price greater than 0.");
+      return;
+    }
+    if (quantity <= 0) {
+      alert("Please enter a valid quantity greater than 0.");
+      return;
+    }
+    if (!condition) {
+      alert("Please select a condition for your item.");
+      return;
+    }
+    if (imagePreviews.length === 0) {
+      alert("Please upload at least one image for your item.");
+      return;
+    }
+    if (!userId) {
+      alert("You must be logged in to post an item.");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("title", title);
     formData.append("description", description);
@@ -85,29 +116,41 @@ export default function PostItemPage() {
     formData.append("quantity", Math.round(quantity).toString());
     formData.append("status", "active"); 
     formData.append("user_id", userId || "");
+    // Location is optional, so we don't need to send it if it's not in the form
     
     // Append all images from imagePreviews
     imagePreviews.forEach((image) => {
       formData.append("images", image.file);
     });
 
-    // Call the server action
-    const response = await fetch("/post-item/action", {
-      method: "POST",
-      body: formData,
-    });
+    try {
+      // Call the server action
+      const response = await fetch("/post-item/action", {
+        method: "POST",
+        body: formData,
+      });
 
-    if (!response.ok) {
-      alert("Failed to add listing. Please try again.");
-      return;
-    }
+      const result = await response.json();
 
-    const result = await response.json();
-    if (result.success && result.listing_id) {
-      // Redirect to the item listing page
-      router.push(`/item-page/${result.listing_id}`);
-    } else {
-      alert("Listing added but failed to get item ID. Please try again.");
+      if (!response.ok) {
+        // Show the actual error message from the server
+        const errorMessage = result.error || "Failed to add listing. Please try again.";
+        alert(`Error: ${errorMessage}`);
+        console.error("Server error:", result);
+        return;
+      }
+
+      if (result.success && result.listing_id) {
+        // Redirect to the item listing page
+        router.push(`/item-page/${result.listing_id}`);
+      } else {
+        const errorMessage = result.error || "Listing added but failed to get item ID. Please try again.";
+        alert(`Error: ${errorMessage}`);
+        console.error("Unexpected response:", result);
+      }
+    } catch (error) {
+      console.error("Network error:", error);
+      alert("Network error: Failed to connect to server. Please check your connection and try again.");
     }
   };
 
