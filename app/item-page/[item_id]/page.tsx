@@ -1,287 +1,112 @@
-'use client';
+import { createClient } from '@/lib/supabase/server';
+import { notFound } from 'next/navigation';
+import ItemPageClient from './item-page-client';
 
-import { useState } from 'react';
-import { useParams } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Heart, Search } from 'lucide-react';
-import {
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  SignUpButton,
-  UserButton,
-} from '@clerk/nextjs';
-import Link from 'next/link';
-import Image from 'next/image';
-
-// Dummy data for the item
-const dummyItem = {
-  id: '1',
-  title: 'Carnegie Mellon Scotty Tote Bag',
-  price: 25.00,
-  category: 'Accessories',
-  brand: 'Carnegie Mellon University',
-  condition: 'Like New',
-  dateListed: '2024-01-15',
-  description: 'Cream-colored canvas tote bag with red accents and embroidered Scotty dog design. Perfect for carrying books, groceries, or campus essentials. Includes branded drink containers. Great condition, barely used.',
-  imageUrl: '/scotty-tote-dummy.jpg',
-  isLiked: false,
+type ListingImage = {
+  listing_image_id: number;
+  listing_id: number;
+  storage: {
+    base64: string;
+    name: string;
+    type: string;
+  };
+  sort_order: number;
 };
 
-export default function ItemPage() {
-  const params = useParams();
-  const itemId = params.item_id as string;
-  const [isLiked, setIsLiked] = useState(dummyItem.isLiked);
-  const [searchQuery, setSearchQuery] = useState('');
+type Listing = {
+  listing_id: number;
+  seller_id: string;
+  title: string | null;
+  description: string | null;
+  price_cents: number | null;
+  currency: string | null;
+  condition: string | null;
+  quantity: number | null;
+  status: string | null;
+  location: Record<string, unknown> | string | null;
+  created_at: string | null;
+  updated_at: string | null;
+};
 
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-  };
-
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Header Navigation */}
-      <header className="border-b bg-background sticky top-0 z-50">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16 gap-4">
-            {/* Logo */}
-            <Link href="/" className="flex items-center gap-2">
-              <Image
-                src="/logo-blue.png"
-                alt="CollegeCart Logo"
-                width={60}
-                height={60}
-                className="object-contain"
-              />
-              <span className="font-semibold text-lg">CollegeCart</span>
-            </Link>
-
-            {/* Search Bar */}
-            <div className="flex-1 max-w-2xl mx-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="Search items..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 w-full"
-                />
-              </div>
-            </div>
-
-            {/* Right Side Actions */}
-            <div className="flex items-center gap-3">
-              <SignedOut>
-                <SignInButton mode="modal">
-                  <Button variant="ghost" size="sm">
-                    Sign in
-                  </Button>
-                </SignInButton>
-                <SignUpButton mode="modal">
-                  <Button variant="ghost" size="sm">
-                    Log in
-                  </Button>
-                </SignUpButton>
-              </SignedOut>
-              <SignedIn>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="relative"
-                  onClick={handleLike}
-                >
-                  <Heart
-                    className={`w-5 h-5 ${isLiked ? 'fill-red-500 text-red-500' : ''}`}
-                  />
-                </Button>
-                <Button variant="outline" size="sm">
-                  Sell
-                </Button>
-                <UserButton />
-              </SignedIn>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Item Image */}
-          <div className="w-full">
-            <Card className="overflow-hidden">
-              <div className="aspect-square bg-muted flex items-center justify-center relative">
-                <Image
-                  src={dummyItem.imageUrl}
-                  alt={dummyItem.title}
-                  fill
-                  className="object-cover"
-                  priority
-                />
-              </div>
-            </Card>
-          </div>
-
-          {/* Item Details */}
-          <div className="flex flex-col gap-6">
-            <div>
-              <h1 className="text-4xl font-bold mb-4">{dummyItem.title}</h1>
-              <p className="text-3xl font-bold text-primary mb-6">
-                ${dummyItem.price.toFixed(2)}
-              </p>
-
-              {/* Action Buttons */}
-              <div className="flex items-center gap-3 mb-6">
-                <Button 
-                  size="lg" 
-                  className="flex-1 border-0 text-white"
-                  style={{
-                    background: 'linear-gradient(to right, #4a2db8, #a78bfa)',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'linear-gradient(to right, #3d2599, #9d7ff0)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'linear-gradient(to right, #4a2db8, #a78bfa)';
-                  }}
-                >
-                  Make Offer
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-12 w-12"
-                  onClick={handleLike}
-                >
-                  <Heart
-                    className={`w-6 h-6 ${isLiked ? 'fill-red-500 text-red-500' : ''}`}
-                  />
-                </Button>
-              </div>
-            </div>
-
-            {/* Item Specifications */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Item Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between border-b pb-2">
-                  <span className="text-muted-foreground font-medium">
-                    Category
-                  </span>
-                  <Badge variant="secondary">{dummyItem.category}</Badge>
-                </div>
-                <div className="flex items-center justify-between border-b pb-2">
-                  <span className="text-muted-foreground font-medium">
-                    Brand
-                  </span>
-                  <span className="font-medium">{dummyItem.brand}</span>
-                </div>
-                <div className="flex items-center justify-between border-b pb-2">
-                  <span className="text-muted-foreground font-medium">
-                    Condition
-                  </span>
-                  <span className="font-medium">{dummyItem.condition}</span>
-                </div>
-                <div className="flex items-center justify-between border-b pb-2">
-                  <span className="text-muted-foreground font-medium">
-                    Date Listed
-                  </span>
-                  <span className="font-medium">{dummyItem.dateListed}</span>
-                </div>
-                <div className="pt-2">
-                  <span className="text-muted-foreground font-medium block mb-2">
-                    Item Description
-                  </span>
-                  <p className="text-sm leading-relaxed">
-                    {dummyItem.description}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* Comments Section */}
-        <div className="mt-12">
-          <Card>
-            <CardHeader>
-              <CardTitle>Comments</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <SignedOut>
-                <div className="p-8 text-center border border-dashed rounded-lg bg-muted/50">
-                  <p className="text-muted-foreground">
-                    You need to sign in to comment on this item.
-                  </p>
-                  <div className="flex gap-3 justify-center mt-4">
-                    <SignInButton mode="modal">
-                      <Button variant="outline">Sign In</Button>
-                    </SignInButton>
-                    <SignUpButton mode="modal">
-                      <Button 
-                        className="border-0 text-white"
-                        style={{
-                          background: 'linear-gradient(to right, #4a2db8, #a78bfa)',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = 'linear-gradient(to right, #3d2599, #9d7ff0)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = 'linear-gradient(to right, #4a2db8, #a78bfa)';
-                        }}
-                      >
-                        Sign Up
-                      </Button>
-                    </SignUpButton>
-                  </div>
-                </div>
-              </SignedOut>
-              <SignedIn>
-                <div className="space-y-4">
-                  <div className="flex gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <span className="text-sm font-medium">U</span>
-                    </div>
-                    <div className="flex-1">
-                      <Input
-                        placeholder="Write a comment..."
-                        className="w-full"
-                      />
-                      <div className="flex justify-end mt-2">
-                        <Button 
-                          size="sm" 
-                          className="border-0 text-white"
-                          style={{
-                            background: 'linear-gradient(to right, #4a2db8, #a78bfa)',
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = 'linear-gradient(to right, #3d2599, #9d7ff0)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'linear-gradient(to right, #4a2db8, #a78bfa)';
-                          }}
-                        >
-                          Post Comment
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-sm text-muted-foreground text-center py-4">
-                    No comments yet. Be the first to comment!
-                  </div>
-                </div>
-              </SignedIn>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
-    </div>
-  );
+function formatPrice(priceCents: number | null, currency: string | null) {
+  if (priceCents === null) return "$0.00";
+  const defaultCurrency = "USD";
+  const code = currency?.toUpperCase() ?? defaultCurrency;
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: code,
+    }).format(priceCents / 100);
+  } catch {
+    return `${priceCents / 100} ${code}`;
+  }
 }
 
+function formatCondition(condition: string | null) {
+  if (!condition) return "Not specified";
+  return condition
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+export const dynamic = 'force-dynamic';
+
+export default async function ItemPage({
+  params,
+}: {
+  params: Promise<{ item_id: string }>;
+}) {
+  const { item_id } = await params;
+  const supabase = await createClient();
+
+  // Fetch listing data
+  const { data: listing, error: listingError } = await supabase
+    .from('listing')
+    .select('*')
+    .eq('listing_id', item_id)
+    .single();
+
+  if (listingError || !listing) {
+    notFound();
+  }
+
+  // Fetch listing images
+  const { data: images, error: imagesError } = await supabase
+    .from('listing_image')
+    .select('*')
+    .eq('listing_id', item_id)
+    .order('sort_order', { ascending: true });
+
+  // Convert base64 images to data URLs
+  const imageUrls = images && !imagesError
+    ? images.map((img: ListingImage) => {
+        const storage = img.storage;
+        if (storage && storage.base64) {
+          return `data:${storage.type || 'image/jpeg'};base64,${storage.base64}`;
+        }
+        return null;
+      }).filter(Boolean) as string[]
+    : [];
+
+  const listingData = listing as Listing;
+
+  return (
+    <ItemPageClient
+      listing={{
+        id: listingData.listing_id.toString(),
+        title: listingData.title || 'Untitled Listing',
+        price: listingData.price_cents ? listingData.price_cents / 100 : 0,
+        priceFormatted: formatPrice(listingData.price_cents, listingData.currency),
+        description: listingData.description || '',
+        condition: formatCondition(listingData.condition),
+        quantity: listingData.quantity || 0,
+        dateListed: listingData.created_at
+          ? new Date(listingData.created_at).toLocaleDateString()
+          : 'Unknown',
+        imageUrls: imageUrls.length > 0 ? imageUrls : [],
+        category: 'Category', // TODO: Add category lookup if you have category_id
+      }}
+    />
+  );
+}
