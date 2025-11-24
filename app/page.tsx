@@ -182,7 +182,7 @@ export default function CollegeCartHome() {
               <Link href="/cart" className="hidden md:flex">
                 <ShoppingCart className="h-6 w-6" />
               </Link>
-              <Link href="/sell">
+              <Link href="/post-item">
                 <Button className="bg-white text-[#2f167a] rounded-xl px-6">
                   Sell
                 </Button>

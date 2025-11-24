@@ -205,9 +205,11 @@ export default function PostItemPage() {
                 </SignUpButton>
               </SignedOut>
               <SignedIn>
-                <Button variant="outline" size="sm">
-                  Sell
-                </Button>
+                <Link href="/post-item">
+                  <Button variant="outline" size="sm">
+                    Sell
+                  </Button>
+                </Link>
                 <UserButton />
               </SignedIn>
             </div>
