@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import {
   Search as SearchIcon,
@@ -19,13 +17,14 @@ import {
   SignUpButton,
   UserButton,
 } from "@clerk/nextjs";
+import { createClient } from "@/lib/supabase/server";
+import HomeClient from "./home-client";
 
 /* ---------------- DATA ---------------- */
 
 const HERO_TILES = [
   {
     id: "furniture",
-
     eyebrow: "Shelves, Cabinets, Storage",
     title: "Furniture",
     href: "/c/furniture",
@@ -134,90 +133,87 @@ function TileCard({
   );
 }
 
+type ListingImage = {
+  listing_image_id: number;
+  listing_id: number;
+  storage: {
+    base64: string;
+    name: string;
+    type: string;
+  };
+  sort_order: number;
+};
+
+type Listing = {
+  listing_id: number;
+  seller_id: string;
+  title: string | null;
+  description: string | null;
+  price_cents: number | null;
+  currency: string | null;
+  condition: string | null;
+  quantity: number | null;
+  status: string | null;
+  created_at: string | null;
+};
+
+function formatPrice(priceCents: number | null, currency: string | null) {
+  if (priceCents === null) return "$0.00";
+  const defaultCurrency = "USD";
+  const code = currency?.toUpperCase() ?? defaultCurrency;
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: code,
+    }).format(priceCents / 100);
+  } catch {
+    return `${priceCents / 100} ${code}`;
+  }
+}
+
+export const dynamic = "force-dynamic";
+
 /* ---------------- PAGE ---------------- */
 
-export default function CollegeCartHome() {
-  const [query, setQuery] = useState("");
+export default async function CollegeCartHome() {
+  const supabase = await createClient();
 
-  return (
-    <div className="min-h-screen bg-white text-slate-900">
-      {/* Header */}
-      <header className="bg-[#2f167a] text-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="flex items-center justify-between py-3 gap-3">
-            <div className="flex items-center gap-3">
-              <Menu className="h-6 w-6 md:hidden" />
-              <Link href="/" className="flex items-center gap-2">
-                <div className="h-9 w-9 bg-white/10 grid place-items-center rounded-md">
-                  <Sparkles className="h-5 w-5" />
-                </div>
-                <span className="text-xl font-semibold">CollegeCart</span>
-              </Link>
-            </div>
+  // Fetch recent listings (limit to 8 for the "See what's selling" section)
+  const { data: listings, error } = await supabase
+    .from("listing")
+    .select("*")
+    .eq("status", "active")
+    .order("created_at", { ascending: false })
+    .limit(8);
 
-            <div className="hidden md:flex flex-1 max-w-xl items-center gap-2">
-              <div className="relative w-full">
-                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 opacity-80" />
-                <Input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search CollegeCart"
-                  className="pl-10 h-11 rounded-full bg-white text-slate-900"
-                />
-              </div>
-            </div>
+  // Fetch images for each listing
+  const listingsWithImages = await Promise.all(
+    (listings || []).map(async (listing: Listing) => {
+      const { data: images } = await supabase
+        .from("listing_image")
+        .select("*")
+        .eq("listing_id", listing.listing_id)
+        .order("sort_order", { ascending: true })
+        .limit(1);
 
-            <div className="flex items-center gap-4">
-              <SignedOut>
-                <SignInButton />
-                <SignUpButton>
-                  <button className="bg-[#6c47ff] text-white rounded-full font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 cursor-pointer">
-                    Sign Up
-                  </button>
-                </SignUpButton>
-              </SignedOut>
-              <SignedIn>
-                <UserButton />
-              </SignedIn>
-              <Link href="/cart" className="hidden md:flex">
-                <ShoppingCart className="h-6 w-6" />
-              </Link>
-              <Link href="/post-item">
-                <Button className="bg-white text-[#2f167a] rounded-xl px-6">
-                  Sell
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
+      let imageUrl = null;
+      if (images && images.length > 0) {
+        const img = images[0] as ListingImage;
+        if (img.storage && img.storage.base64) {
+          imageUrl = `data:${img.storage.type || "image/jpeg"};base64,${img.storage.base64}`;
+        }
+      }
 
-      {/* Main Content */}
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 py-8 space-y-10">
-        {/* Top 3 tiles */}
-        <section className="grid md:grid-cols-3 gap-6">
-          {HERO_TILES.map((tile) => (
-            <TileCard key={tile.id} {...tile} hero />
-          ))}
-        </section>
-
-        {/* Bottom 4 tiles */}
-        <section className="grid md:grid-cols-4 gap-6">
-          {SMALL_TILES.map((tile) => (
-            <TileCard key={tile.title} {...tile} />
-          ))}
-        </section>
-
-        <p className="text-xl font-medium pt-4">See what's selling</p>
-      </main>
-
-      {/* Footer */}
-      <footer className="border-t mt-12">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 text-sm text-slate-600 flex items-center gap-3">
-          <Clock className="h-4 w-4" />
-          Updated just now • CMU College Cart beta
-        </div>
-      </footer>
-    </div>
+      return {
+        id: listing.listing_id.toString(),
+        title: listing.title || "Untitled Listing",
+        price: listing.price_cents ? listing.price_cents / 100 : 0,
+        priceFormatted: formatPrice(listing.price_cents, listing.currency),
+        imageUrl: imageUrl || "/scotty-tote-dummy.jpg",
+        href: `/item-page/${listing.listing_id}`,
+      };
+    })
   );
+
+  return <HomeClient listings={listingsWithImages} />;
 }
