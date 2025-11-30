@@ -95,6 +95,7 @@ export default async function ItemPage({
     <ItemPageClient
       listing={{
         id: listingData.listing_id.toString(),
+        seller_id: listingData.seller_id.toString(),
         title: listingData.title || 'Untitled Listing',
         price: listingData.price_cents ? listingData.price_cents / 100 : 0,
         priceFormatted: formatPrice(listingData.price_cents, listingData.currency),

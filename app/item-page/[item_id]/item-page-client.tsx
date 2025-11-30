@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Heart, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useAuth } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
 import {
   SignedIn,
   SignedOut,
@@ -18,6 +20,7 @@ import Image from 'next/image';
 
 type ListingData = {
   id: string;
+  seller_id: string;
   title: string;
   price: number;
   priceFormatted: string;
@@ -31,11 +34,60 @@ type ListingData = {
 
 export default function ItemPageClient({ listing }: { listing: ListingData }) {
   const [isLiked, setIsLiked] = useState(false);
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const { userId, isSignedIn } = useAuth();   // might be an issue
 
   const handleLike = () => {
     setIsLiked(!isLiked);
+  };
+
+  const handleOffer = async(e: React.FormEvent)  => {
+    e.preventDefault();
+    if (!isSignedIn || !userId) {
+    alert("You must be logged in to make an offer!");
+    return;
+  }
+    if(!userId){
+      alert("You must be logged into make an offer!")
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("listing_id", listing.id);
+    formData.append("seller_id", listing.seller_id);
+    formData.append("buyer_id", userId );
+    
+    try{
+      const response = await fetch("/item-page/[item_id]/action", {
+        method : "POST",
+        body : formData
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        // Show the actual error message from the server
+        const errorMessage = result.error || "Failed to send offer. Please try again.";
+        alert(`Error: ${errorMessage}`);
+        console.error("Server error:", result);
+        return;
+      }
+
+      if (result.success && result.conversation_id) {
+          // Redirect to the item listing page
+          router.push(`/chat/convo?chat=${result.conversation_id}`);
+          console.log(result.conversation_id);
+        } else {
+          const errorMessage = result.error || "Offer made but failed to get ID. Please try again.";
+          alert(`Error: ${errorMessage}`);
+          console.error("Unexpected response:", result);
+        }
+      } catch (error) {
+        console.error("Network error:", error);
+        alert("Network error: Failed to connect to server. Please check your connection and try again.");
+      }
   };
 
   const handlePreviousImage = () => {
@@ -222,6 +274,7 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
                   onMouseLeave={(e) => {
                     e.currentTarget.style.background = 'linear-gradient(to right, #4a2db8, #a78bfa)';
                   }}
+                  onClick = {handleOffer}
                 >
                   Make Offer
                 </Button>
