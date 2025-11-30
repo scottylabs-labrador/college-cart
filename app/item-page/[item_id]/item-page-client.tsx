@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Heart, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react'
+import { createClient } from '@supabase/supabase-js'
 import {
   SignedIn,
   SignedOut,
@@ -32,15 +34,80 @@ type ListingData = {
   category: string;
 };
 
+const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY || ""; 
+
+const supabase = createClient(
+  'https://dkmaapjiqiqyxbjyshky.supabase.co',
+ key
+)
+
 export default function ItemPageClient({ listing }: { listing: ListingData }) {
   const [isLiked, setIsLiked] = useState(false);
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const { userId, isSignedIn } = useAuth();   // might be an issue
+  const { userId, isSignedIn } = useAuth();   
 
-  const handleLike = () => {
+  useEffect(() => {
+    const fetchLike = async () => {
+      const { data, error } = await supabase
+        .from('favorite')
+        .select('id')
+        .eq('user_id', userId) 
+        .eq('listing_id', listing.id)
+        .order('created_at', { ascending: true });
+      if (error) {
+        console.error("Error fetching messages:", error);
+      } else if (data) {
+        const exists = (data?.length ?? 0) > 0;
+        setIsLiked(exists);
+      }
+    };
+
+    fetchLike();
+  }, [])
+
+  const handleLike = async(e: React.FormEvent)  => {
+    e.preventDefault();
+    if(!isSignedIn || !userId){
+      alert("You must be logged in to like a listing!");
+      return;
+    }
     setIsLiked(!isLiked);
+
+    const formData = new FormData();
+    formData.append("listing_id", listing.id);
+    formData.append("user_id", userId);
+
+    try{
+      const response = await fetch("/item-page/[item_id]/f_action", {
+        method : "POST",
+        body : formData
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        // Show the actual error message from the server
+        const errorMessage = result.error || "Failed to like listing. Please try again.";
+        alert(`Error: ${errorMessage}`);
+        console.error("Server error:", result);
+        return;
+      }
+
+      if (result.success && result.favorite_id) {
+          // Redirect to the item listing page
+          console.log(result.favorite_id);
+        } else {
+          const errorMessage = result.error || "Liked but failed to get ID. Please try again.";
+          alert(`Error: ${errorMessage}`);
+          console.error("Unexpected response:", result);
+        }
+      } catch (error) {
+        console.error("Network error:", error);
+        alert("Network error: Failed to connect to server. Please check your connection and try again.");
+      }
+
   };
 
   const handleOffer = async(e: React.FormEvent)  => {
@@ -151,7 +218,7 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
                 </SignUpButton>
               </SignedOut>
               <SignedIn>
-                <Button
+                {/* <Button
                   variant="ghost"
                   size="icon"
                   className="relative"
@@ -160,7 +227,7 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
                   <Heart
                     className={`w-5 h-5 ${isLiked ? 'fill-red-500 text-red-500' : ''}`}
                   />
-                </Button>
+                </Button> */}
                 <Link href="/post-item">
                   <Button variant="outline" size="sm">
                     Sell

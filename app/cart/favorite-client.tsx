@@ -132,7 +132,7 @@ type ListingItem = {
   href: string;
 };
 
-export default function HomeClient({ listings }: { listings: ListingItem[] }) {
+export default function FavoriteClient({ listings }: { listings: ListingItem[] }) {
   const [query, setQuery] = useState("");
 
   return (
@@ -175,7 +175,7 @@ export default function HomeClient({ listings }: { listings: ListingItem[] }) {
               <SignedIn>
                 <UserButton />
               </SignedIn>
-              <Link href="/cart" className="hidden md:flex"> 
+              <Link href="/chat" className="hidden md:flex"> 
                 <ShoppingCart className="h-6 w-6" />
               </Link>
               <Link href="/post-item">
@@ -190,26 +190,13 @@ export default function HomeClient({ listings }: { listings: ListingItem[] }) {
 
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 sm:px-6 py-8 space-y-10">
-        {/* Top 3 tiles */}
-        <section className="grid md:grid-cols-3 gap-6">
-          {HERO_TILES.map((tile) => (
-            <TileCard key={tile.id} {...tile} hero />
-          ))}
-        </section>
-
-        {/* Bottom 4 tiles */}
-        <section className="grid md:grid-cols-4 gap-6">
-          {SMALL_TILES.map((tile) => (
-            <TileCard key={tile.title} {...tile} />
-          ))}
-        </section>
 
         {/* See what's selling section */}
         <div>
-          <p className="text-xl font-medium pt-4 mb-6">See what's selling</p>
+          <p className="text-xl font-medium pt-4 mb-6">Favorited Items</p>
           {listings.length === 0 ? (
             <div className="text-center py-12 text-slate-600">
-              <p>No items for sale yet. Be the first to list something!</p>
+              <p>No favorited items yet. Go like some items!</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
