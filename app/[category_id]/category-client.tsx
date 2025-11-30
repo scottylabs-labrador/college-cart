@@ -29,7 +29,7 @@ type ListingItem = {
   href: string;
 };
 
-export default function FavoriteClient({ listings }: { listings: ListingItem[] }) {
+export default function CategoryClient({ listings, name }: { listings: ListingItem[], name: string }) {
   const [query, setQuery] = useState("");
 
   return (
@@ -90,10 +90,10 @@ export default function FavoriteClient({ listings }: { listings: ListingItem[] }
 
         {/* See what's selling section */}
         <div>
-          <p className="text-xl font-medium pt-4 mb-6">Favorited Items</p>
+          <p className="text-xl font-medium pt-4 mb-6">{name}</p>
           {listings.length === 0 ? (
             <div className="text-center py-12 text-slate-600">
-              <p>No favorited items yet. Go like some items!</p>
+              <p>No items in this category yet. Be the first one to upload!</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

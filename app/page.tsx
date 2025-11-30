@@ -27,7 +27,7 @@ const HERO_TILES = [
     id: "furniture",
     eyebrow: "Shelves, Cabinets, Storage",
     title: "Furniture",
-    href: "/c/furniture",
+    href: "/c?c=1&n=Furniture",
     image:
       "https://images.unsplash.com/photo-1501045661006-fcebe0257c3f?q=80&w=1200&auto=format&fit=crop",
   },
@@ -35,7 +35,7 @@ const HERO_TILES = [
     id: "appliances",
     eyebrow: "Refrigerators, microwaves",
     title: "Appliances",
-    href: "/c/appliances",
+    href: "/c?c=2&n=Appliances",
     image:
       "https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=1200&auto=format&fit=crop",
   },
@@ -43,7 +43,7 @@ const HERO_TILES = [
     id: "studysupplies",
     eyebrow: "Laptops, headphones, monitors",
     title: "Textbooks & Study Supplies",
-    href: "/c/study-materials",
+    href: "/c?c=3&n=Study%20Supplies",
     image:
       "https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=1200&auto=format&fit=crop",
   },
@@ -53,28 +53,28 @@ const SMALL_TILES = [
   {
     eyebrow: "Laptops, monitors",
     title: "Electronics",
-    href: "/c/electronics",
+    href: "/c?c=4&n=Electronics",
     image:
       "https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=1200&auto=format&fit=crop",
   },
   {
     eyebrow: "Merch, jackets, formal wear",
     title: "Clothing",
-    href: "/c/clothing",
+    href: "/c?c=5&n=Clothing",
     image:
       "https://images.unsplash.com/photo-1521335629791-ce4aec67dd47?q=80&w=1000&auto=format&fit=crop",
   },
   {
     eyebrow: "Bikes, scooters",
     title: "Commute",
-    href: "/c/commute",
+    href: "/c?c=6&n=Commute",
     image:
       "https://images.unsplash.com/photo-1544531585-9847c3227f84?q=80&w=1000&auto=format&fit=crop",
   },
   {
     eyebrow: "Giveaways, art, tickets",
     title: "Free & Fun",
-    href: "/c/free",
+    href: "/c?c=7&n=Free%20%26%20Fun",
     image:
       "https://images.unsplash.com/photo-1544531585-9847c3227f84?q=80&w=1000&auto=format&fit=crop",
   },
