@@ -30,7 +30,7 @@ const MAX_IMAGES = 10;
 export default function PostItemPage() {
   const { isLoaded, userId } = useAuth();
   const router = useRouter();
-  const [category, setCategory] = useState('');
+  const [category, setCategory] = useState(0);
   const [price, setPrice] = useState(0.0);
   const [quantity, setQuantity] = useState(0);
   const [condition, setCondition] = useState('');
@@ -116,6 +116,7 @@ export default function PostItemPage() {
     formData.append("quantity", Math.round(quantity).toString());
     formData.append("status", "active"); 
     formData.append("user_id", userId || "");
+    formData.append("category", (category).toString());
     // Location is optional, so we don't need to send it if it's not in the form
     
     // Append all images from imagePreviews
@@ -322,14 +323,20 @@ export default function PostItemPage() {
                     >
                       Category
                     </label>
-                    <Input
-                      id="category"
-                      type="text"
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                      placeholder="e.g., Electronics, Clothing, Furniture"
-                      className="w-full"
-                    />
+                    <Select value={category} onValueChange={setCategory}>
+                      <SelectTrigger id="category" className="w-full">
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">Furniture</SelectItem>
+                        <SelectItem value="2">Appliances</SelectItem>
+                        <SelectItem value="3">Textbooks & Study Supplies</SelectItem>
+                        <SelectItem value="4">Electronics</SelectItem>
+                        <SelectItem value="5">Clothing</SelectItem>
+                        <SelectItem value="6">Commute</SelectItem>
+                        <SelectItem value="7">Free & Fun</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   {/* Quantity Field */}

@@ -15,6 +15,7 @@ export async function POST(request: Request) {
     const status = formData.get('status') as string
     const location = formData.get('location') as string | null
     const imageEntries = formData.getAll('images')
+    const category = formData.get('category') as string
     const imageFiles = imageEntries.filter(
       (entry): entry is File => entry instanceof File && entry.size > 0
     )
@@ -32,7 +33,7 @@ export async function POST(request: Request) {
     if (!condition || condition.trim() === '') {
       return NextResponse.json({ success: false, error: 'Condition is required' }, { status: 400 })
     }
-
+    const category_id = parseInt(category);
     const parsedPrice = priceValue ? parseInt(priceValue, 10) : null
     const price_cents = Number.isNaN(parsedPrice) ? null : parsedPrice
     
@@ -49,7 +50,7 @@ export async function POST(request: Request) {
 
     const { data: listingData, error: listingError } = await supabase
       .from('listing')
-      .insert([{ title, seller_id, description, price_cents, condition, quantity, status, location }])
+      .insert([{ title, seller_id, category_id, description, price_cents, condition, quantity, status, location }])
       .select('listing_id')
       .single()
 

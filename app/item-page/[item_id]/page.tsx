@@ -78,6 +78,18 @@ export default async function ItemPage({
     .eq('listing_id', item_id)
     .order('sort_order', { ascending: true });
 
+
+  // Fetch category names
+  
+  const { data: categoryName, error: categoryError } = await supabase
+    .from('category')
+    .select('*')
+    .eq('id', listing.category_id)
+    .single()
+  
+  if (categoryError) console.error("Couldn't fetch category name", categoryError);
+
+
   // Convert base64 images to data URLs
   const imageUrls = images && !imagesError
     ? images.map((img: ListingImage) => {
@@ -106,7 +118,7 @@ export default async function ItemPage({
           ? new Date(listingData.created_at).toLocaleDateString()
           : 'Unknown',
         imageUrls: imageUrls.length > 0 ? imageUrls : [],
-        category: 'Category', // TODO: Add category lookup if you have category_id
+        category: categoryName.category_name, // TODO: Add category lookup if you have category_id
       }}
     />
   );
