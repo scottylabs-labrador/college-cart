@@ -9,7 +9,7 @@ import { createClient } from '@supabase/supabase-js'
 import { useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 
-const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY || ""; 
+const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || ""; 
 
 const supabase = createClient(
   'https://dkmaapjiqiqyxbjyshky.supabase.co',

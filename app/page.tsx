@@ -1,22 +1,3 @@
-import React from "react";
-import Link from "next/link";
-import {
-  Search as SearchIcon,
-  ShoppingCart,
-  Menu,
-  Sparkles,
-  Clock,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import {
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  SignUpButton,
-  UserButton,
-} from "@clerk/nextjs";
 import { createClient } from "@/lib/supabase/server";
 import HomeClient from "./home-client";
 
