@@ -4,8 +4,7 @@ import React from "react";
 import Link from "next/link";
 import {
   ShoppingCart,
-  Menu,
-  Sparkles,
+  Menu, 
   Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,6 +17,7 @@ import {
   UserButton,
 } from "@clerk/nextjs";
 import SearchBar from "@/components/search-bar";
+import Image from "next/image";
 
 type ListingItem = {
   id: string;
@@ -38,11 +38,15 @@ export default function CategoryClient({ listings, name }: { listings: ListingIt
             <div className="flex items-center gap-3">
               <Menu className="h-6 w-6 md:hidden" />
               <Link href="/" className="flex items-center gap-2">
-                <div className="h-9 w-9 bg-white/10 grid place-items-center rounded-md">
-                  <Sparkles className="h-5 w-5" />
-                </div>
-                <span className="text-xl font-semibold">CollegeCart</span>
-              </Link>
+              <Image
+                src="/logo-white.png"
+                alt="CollegeCart Logo"
+                width={60}
+                height={60}
+                className="object-contain"
+              />
+              <span className="font-semibold text-lg">CollegeCart</span>
+            </Link>
             </div>
 
             <div className="hidden md:flex flex-1 max-w-xl items-center gap-2">

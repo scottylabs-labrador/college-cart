@@ -27,7 +27,7 @@ const HERO_TILES = [
     title: "Furniture",
     href: "/c?c=1&n=Furniture",
     image:
-      "https://images.unsplash.com/photo-1501045661006-fcebe0257c3f?q=80&w=1200&auto=format&fit=crop",
+      "/furniture.png",
   },
   {
     id: "appliances",
@@ -35,7 +35,7 @@ const HERO_TILES = [
     title: "Appliances",
     href: "/c?c=2&n=Appliances",
     image:
-      "https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=1200&auto=format&fit=crop",
+      "/essentials.png",
   },
   {
     id: "studysupplies",
@@ -43,7 +43,7 @@ const HERO_TILES = [
     title: "Textbooks & Study Supplies",
     href: "/c?c=3&n=Study%20Supplies",
     image:
-      "https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=1200&auto=format&fit=crop",
+      "/books.png",
   },
 ];
 
@@ -53,28 +53,28 @@ const SMALL_TILES = [
     title: "Electronics",
     href: "/c?c=4&n=Electronics",
     image:
-      "https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=1200&auto=format&fit=crop",
+      "/electronics.png",
   },
   {
     eyebrow: "Merch, jackets, formal wear",
     title: "Clothing",
     href: "/c?c=5&n=Clothing",
     image:
-      "https://images.unsplash.com/photo-1521335629791-ce4aec67dd47?q=80&w=1000&auto=format&fit=crop",
+      "/clothing.png",
   },
   {
     eyebrow: "Bikes, scooters",
     title: "Commute",
     href: "/c?c=6&n=Commute",
     image:
-      "https://images.unsplash.com/photo-1544531585-9847c3227f84?q=80&w=1000&auto=format&fit=crop",
+      "/commute.png",
   },
   {
     eyebrow: "Giveaways, art, tickets",
     title: "Free & Fun",
     href: "/c?c=7&n=Free%20%26%20Fun",
     image:
-      "https://images.unsplash.com/photo-1544531585-9847c3227f84?q=80&w=1000&auto=format&fit=crop",
+      "/tickets.png",
   },
 ];
 
@@ -143,7 +143,7 @@ export default function HomeClient({ listings }: { listings: ListingItem[] }) {
               <Menu className="h-6 w-6 md:hidden" />
               <Link href="/" className="flex items-center gap-2">
               <Image
-                src="/logo-blue.png"
+                src="/logo-white.png"
                 alt="CollegeCart Logo"
                 width={60}
                 height={60}

@@ -134,7 +134,7 @@ export default async function ViewListingsPage({
               <Menu className="h-6 w-6 md:hidden" />
               <Link href="/" className="flex items-center gap-2">
                 <Image
-                  src="/logo-blue.png"
+                  src="/logo-white.png"
                   alt="CollegeCart Logo"
                   width={60}
                   height={60}
