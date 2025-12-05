@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Heart, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Heart, ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react'
@@ -20,6 +20,7 @@ import {
 import Link from 'next/link';
 import Image from 'next/image';
 import SearchBar from '@/components/search-bar';
+import ChatModal from '@/components/chat-modal';
 
 type ListingData = {
   id: string;
@@ -46,7 +47,9 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
   const [isLiked, setIsLiked] = useState(false);
   const router = useRouter();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const { userId, isSignedIn } = useAuth();   
+  const { userId, isSignedIn } = useAuth();
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);   
 
   useEffect(() => {
     const fetchLike = async () => {
@@ -108,6 +111,42 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
         alert("Network error: Failed to connect to server. Please check your connection and try again.");
       }
 
+  };
+
+  const handleChat = async () => {
+    if (!isSignedIn || !userId) {
+      alert("You must be logged in to chat with the seller!");
+      return;
+    }
+
+    if (userId === listing.seller_id) {
+      alert("You cannot chat with yourself!");
+      return;
+    }
+
+    // Create or get conversation
+    try {
+      const formData = new FormData();
+      formData.append("listing_id", listing.id);
+      formData.append("buyer_id", userId);
+      formData.append("seller_id", listing.seller_id);
+
+      const response = await fetch(`/item-page/${listing.id}/action`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+      if (result.success && result.conversation_id) {
+        setConversationId(result.conversation_id.toString());
+        setIsChatOpen(true);
+      } else {
+        alert(result.error || "Failed to start conversation");
+      }
+    } catch (error) {
+      console.error("Error creating conversation:", error);
+      alert("Failed to start conversation. Please try again.");
+    }
   };
 
   const handleOffer = async(e: React.FormEvent)  => {
@@ -351,6 +390,15 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
                     className={`w-6 h-6 ${isLiked ? 'fill-red-500 text-red-500' : ''}`}
                   />
                 </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-12 w-12"
+                  onClick={handleChat}
+                  title="Chat with seller"
+                >
+                  <MessageCircle className="w-6 h-6" />
+                </Button>
               </div>
             </div>
 
@@ -471,6 +519,14 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
           </Card>
         </div>
       </main>
+
+      {/* Chat Modal */}
+      <ChatModal
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+        conversationId={conversationId}
+        listingTitle={listing.title}
+      />
     </div>
   );
 }
