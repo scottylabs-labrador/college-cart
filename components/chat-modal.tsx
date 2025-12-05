@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { X, Send } from 'lucide-react';
+import { X, Send, ChevronDown, ChevronUp } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import { useAuth, useUser } from '@clerk/nextjs';
 
@@ -32,6 +32,7 @@ export default function ChatModal({ isOpen, onClose, conversationId, listingTitl
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const { userId } = useAuth();
   const { user } = useUser();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -115,19 +116,63 @@ export default function ChatModal({ isOpen, onClose, conversationId, listingTitl
 
   if (!isOpen) return null;
 
+  if (isCollapsed) {
+    return (
+      <div className="fixed bottom-4 right-4 z-50 w-96 max-w-[calc(100vw-2rem)]">
+        <Card className="shadow-2xl border-2">
+        <CardHeader className="flex flex-row items-center justify-between border-b bg-primary/5 py-2 px-3">
+          <CardTitle className="text-sm font-medium truncate pr-2">Chat: {listingTitle}</CardTitle>
+          <div className="flex items-center gap-1 -mt-0.5">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsCollapsed(false)}
+              className="h-6 w-6 flex-shrink-0 flex items-center justify-center"
+              title="Expand chat"
+            >
+              <ChevronUp className="h-3 w-3" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="h-6 w-6 flex-shrink-0 flex items-center justify-center"
+              title="Close chat"
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+        </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed bottom-4 right-4 z-50 w-96 max-w-[calc(100vw-2rem)]">
       <Card className="h-[550px] flex flex-col shadow-2xl border-2">
         <CardHeader className="flex flex-row items-center justify-between border-b bg-primary/5 py-2 px-3">
           <CardTitle className="text-sm font-medium truncate pr-2">Chat: {listingTitle}</CardTitle>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="h-6 w-6 flex-shrink-0"
-          >
-            <X className="h-3 w-3" />
-          </Button>
+          <div className="flex items-center gap-1 -mt-0.5">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsCollapsed(true)}
+              className="h-6 w-6 flex-shrink-0 flex items-center justify-center"
+              title="Minimize chat"
+            >
+              <ChevronDown className="h-3 w-3" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="h-6 w-6 flex-shrink-0 flex items-center justify-center"
+              title="Close chat"
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="flex-1 flex flex-col p-4 overflow-hidden">
           {/* Messages */}
