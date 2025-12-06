@@ -121,6 +121,9 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
       return;
     }
 
+    // Reset confirmation trigger to prevent opening confirmation dialog when using chat button
+    setOpenConfirmationTrigger(0);
+
     // Create or get conversation
     try {
       const formData = new FormData();
