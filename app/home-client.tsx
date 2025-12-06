@@ -145,11 +145,11 @@ export default function HomeClient({ listings }: { listings: ListingItem[] }) {
               <Image
                 src="/logo-white.png"
                 alt="CollegeCart Logo"
-                width={50}
-                height={50}
-                className="object-contain -mt-2"
+                width={60}
+                height={60}
+                className="object-contain"
               />
-              <span className="font-semibold text-lg leading-none flex items-center">CollegeCart</span>
+              <span className="font-semibold text-lg">CollegeCart</span>
             </Link>
             </div>
 
