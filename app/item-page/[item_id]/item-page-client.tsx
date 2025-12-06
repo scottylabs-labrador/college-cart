@@ -16,7 +16,13 @@ import {
   SignInButton,
   SignUpButton,
 } from '@clerk/nextjs';
+
+import Link from 'next/link';
+import Image from 'next/image';
+import SearchBar from '@/components/search-bar';
+
 import MainHeader from '@/components/main-header';
+
 import ChatModal from '@/components/chat-modal';
 
 type ListingData = {
@@ -46,7 +52,9 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const { userId, isSignedIn } = useAuth();
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [conversationId, setConversationId] = useState<string | null>(null);   
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [uncollapseTrigger, setUncollapseTrigger] = useState(0);
+  const [openConfirmationTrigger, setOpenConfirmationTrigger] = useState(0);   
 
   useEffect(() => {
     const fetchLike = async () => {
@@ -73,7 +81,6 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
       alert("You must be logged in to like a listing!");
       return;
     }
-    setIsLiked(!isLiked);
 
     const formData = new FormData();
     formData.append("listing_id", listing.id);
@@ -87,7 +94,7 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
 
       const result = await response.json();
 
-      if (!response.ok) {
+      if (!response.ok || !result.success) {
         // Show the actual error message from the server
         const errorMessage = result.error || "Failed to like listing. Please try again.";
         alert(`Error: ${errorMessage}`);
@@ -95,18 +102,14 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
         return;
       }
 
-      if (result.success && result.favorite_id) {
-          // Redirect to the item listing page
-          console.log(result.favorite_id);
-        } else {
-          const errorMessage = result.error || "Liked but failed to get ID. Please try again.";
-          alert(`Error: ${errorMessage}`);
-          console.error("Unexpected response:", result);
-        }
-      } catch (error) {
-        console.error("Network error:", error);
-        alert("Network error: Failed to connect to server. Please check your connection and try again.");
-      }
+      // Update the like state based on the server response
+      setIsLiked(result.liked ?? !isLiked);
+    } catch (error) {
+      console.error("Network error:", error);
+      alert("Network error: Failed to connect to server. Please check your connection and try again.");
+      // Revert the optimistic update on error
+      setIsLiked(!isLiked);
+    }
 
   };
 
@@ -120,6 +123,9 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
       alert("You cannot chat with yourself!");
       return;
     }
+
+    // Reset confirmation trigger to prevent opening confirmation dialog when using chat button
+    setOpenConfirmationTrigger(0);
 
     // Create or get conversation
     try {
@@ -157,13 +163,18 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
       return;
     }
 
+    if (userId === listing.seller_id) {
+      alert("You cannot make an offer on your own listing!");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("listing_id", listing.id);
     formData.append("seller_id", listing.seller_id);
     formData.append("buyer_id", userId );
     
     try{
-      const response = await fetch("/item-page/[item_id]/action", {
+      const response = await fetch(`/item-page/${listing.id}/action`, {
         method : "POST",
         body : formData
       });
@@ -179,8 +190,11 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
       }
 
       if (result.success && result.conversation_id) {
-          // Redirect to the item listing page
-          router.push(`/chat/convo?chat=${result.conversation_id}`);
+          // Open the chat modal instead of redirecting
+          setConversationId(result.conversation_id.toString());
+          setIsChatOpen(true);
+          setUncollapseTrigger(prev => prev + 1); // Increment to trigger uncollapse
+          setOpenConfirmationTrigger(prev => prev + 1); // Increment to trigger confirmation dialog
           console.log(result.conversation_id);
         } else {
           const errorMessage = result.error || "Offer made but failed to get ID. Please try again.";
@@ -463,6 +477,8 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
         onClose={() => setIsChatOpen(false)}
         conversationId={conversationId}
         listingTitle={listing.title}
+        uncollapseTrigger={uncollapseTrigger}
+        openConfirmationTrigger={openConfirmationTrigger}
       />
     </div>
   );
