@@ -8,10 +8,45 @@ export async function POST(request: Request) {
     const text = body.text;
     const user = body.user_id;
     const chat = body.chat_id;
+    const messageType = body.message_type || "text";
+    const confirmationData = body.confirmation_data;
+    const confirmationResponseTo = body.confirmation_response_to;
+    const confirmationResponse = body.confirmation_response;
+
+    // Store confirmation data as JSON string in text field if it's a confirmation message
+    // Use "text" as message_type since the enum doesn't support "confirmation"
+    let messageText = text;
+    let actualMessageType = "text";
+    
+    if (messageType === 'confirmation' && confirmationData) {
+      messageText = JSON.stringify({
+        type: 'confirmation',
+        date: confirmationData.date,
+        location: confirmationData.location,
+        price: confirmationData.price,
+        displayText: `Confirmation Request:\nDate: ${confirmationData.date}\nLocation: ${confirmationData.location}\nPrice: ${confirmationData.price}`,
+      });
+      actualMessageType = "text"; // Use "text" for enum compatibility
+    } else if (messageType === 'confirmation_response' && confirmationResponseTo) {
+      messageText = JSON.stringify({
+        type: 'confirmation_response',
+        response_to: confirmationResponseTo,
+        response: confirmationResponse,
+        displayText: `Response: ${confirmationResponse === 'yes' ? 'Yes' : 'No'}`,
+      });
+      actualMessageType = "text"; // Use "text" for enum compatibility
+    }
+
+    const messagePayload: any = {
+      user: user,
+      text: messageText,
+      conversation_id: chat,
+      message_type: actualMessageType,
+    };
 
     const { data: listingData, error: listingError } = await supabase
       .from('message')
-      .insert([{ user: user, text: text, conversation_id: chat, message_type: "text" }])
+      .insert([messagePayload])
       .select('message_id')
       .single()
 
