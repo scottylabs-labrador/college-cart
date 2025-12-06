@@ -25,6 +25,7 @@ export default function ChatPage(){
   const [messages, setMessages] = useState<string[]>([]);
   const [text, setText] = useState('');
 
+
   useEffect(() => {
     const fetchMessages = async () => {
       const { data, error } = await supabase
