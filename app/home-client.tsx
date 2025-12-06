@@ -1,24 +1,24 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Search as SearchIcon,
   ShoppingCart,
   Menu,
-  Sparkles,
   Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import {
   SignedIn,
   SignedOut,
   SignInButton,
   SignUpButton,
-  UserButton,
+ UserButton,
 } from "@clerk/nextjs";
+import SearchBar from "@/components/search-bar";
 
 const HERO_TILES = [
   {
@@ -27,7 +27,7 @@ const HERO_TILES = [
     title: "Furniture",
     href: "/c?c=1&n=Furniture",
     image:
-      "https://images.unsplash.com/photo-1501045661006-fcebe0257c3f?q=80&w=1200&auto=format&fit=crop",
+      "/furniture.png",
   },
   {
     id: "appliances",
@@ -35,7 +35,7 @@ const HERO_TILES = [
     title: "Appliances",
     href: "/c?c=2&n=Appliances",
     image:
-      "https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=1200&auto=format&fit=crop",
+      "/essentials.png",
   },
   {
     id: "studysupplies",
@@ -43,7 +43,7 @@ const HERO_TILES = [
     title: "Textbooks & Study Supplies",
     href: "/c?c=3&n=Study%20Supplies",
     image:
-      "https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=1200&auto=format&fit=crop",
+      "/books.png",
   },
 ];
 
@@ -53,28 +53,28 @@ const SMALL_TILES = [
     title: "Electronics",
     href: "/c?c=4&n=Electronics",
     image:
-      "https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=1200&auto=format&fit=crop",
+      "/electronics.png",
   },
   {
     eyebrow: "Merch, jackets, formal wear",
     title: "Clothing",
     href: "/c?c=5&n=Clothing",
     image:
-      "https://images.unsplash.com/photo-1521335629791-ce4aec67dd47?q=80&w=1000&auto=format&fit=crop",
+      "/clothing.png",
   },
   {
     eyebrow: "Bikes, scooters",
     title: "Commute",
     href: "/c?c=6&n=Commute",
     image:
-      "https://images.unsplash.com/photo-1544531585-9847c3227f84?q=80&w=1000&auto=format&fit=crop",
+      "/commute.png",
   },
   {
     eyebrow: "Giveaways, art, tickets",
     title: "Free & Fun",
     href: "/c?c=7&n=Free%20%26%20Fun",
     image:
-      "https://images.unsplash.com/photo-1544531585-9847c3227f84?q=80&w=1000&auto=format&fit=crop",
+      "/tickets.png",
   },
 ];
 
@@ -133,8 +133,6 @@ type ListingItem = {
 };
 
 export default function HomeClient({ listings }: { listings: ListingItem[] }) {
-  const [query, setQuery] = useState("");
-
   return (
     <div className="min-h-screen bg-white text-slate-900">
       {/* Header */}
@@ -144,23 +142,24 @@ export default function HomeClient({ listings }: { listings: ListingItem[] }) {
             <div className="flex items-center gap-3">
               <Menu className="h-6 w-6 md:hidden" />
               <Link href="/" className="flex items-center gap-2">
-                <div className="h-9 w-9 bg-white/10 grid place-items-center rounded-md">
-                  <Sparkles className="h-5 w-5" />
-                </div>
-                <span className="text-xl font-semibold">CollegeCart</span>
-              </Link>
+              <Image
+                src="/logo-white.png"
+                alt="CollegeCart Logo"
+                width={60}
+                height={60}
+                className="object-contain"
+              />
+              <span className="font-semibold text-lg">CollegeCart</span>
+            </Link>
             </div>
 
             <div className="hidden md:flex flex-1 max-w-xl items-center gap-2">
-              <div className="relative w-full">
-                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 opacity-80" />
-                <Input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search CollegeCart"
-                  className="pl-10 h-11 rounded-full bg-white text-slate-900"
-                />
-              </div>
+              <SearchBar
+                placeholder="Search CollegeCart"
+                className="w-full"
+                inputClassName="pl-10 h-11 rounded-full bg-white text-slate-900"
+                iconClassName="h-5 w-5 opacity-80 text-slate-500"
+              />
             </div>
 
             <div className="flex items-center gap-4">

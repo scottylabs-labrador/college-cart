@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, Upload, X } from 'lucide-react';
+import { Upload, X } from 'lucide-react';
 import {
   SignedIn,
   SignedOut,
@@ -24,6 +24,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import RequireLogin from '@/components/require_login';
 import { useRouter } from 'next/navigation';
+import SearchBar from '@/components/search-bar';
 
 const MAX_IMAGES = 10;
 
@@ -37,7 +38,6 @@ export default function PostItemPage() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [imagePreviews, setImagePreviews] = useState<Array<{ url: string; file: File }>>([]);
-  const [searchQuery, setSearchQuery] = useState('');
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -179,16 +179,12 @@ export default function PostItemPage() {
 
             {/* Search Bar */}
             <div className="flex-1 max-w-2xl mx-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="Search items..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 w-full"
-                />
-              </div>
+              <SearchBar
+                placeholder="Search items..."
+                className="w-full"
+                inputClassName="pl-10"
+                iconClassName="h-4 w-4 text-muted-foreground"
+              />
             </div>
 
             {/* Right Side Actions */}
@@ -446,4 +442,3 @@ export default function PostItemPage() {
     </div>
   );
 }
-

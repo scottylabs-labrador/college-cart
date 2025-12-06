@@ -7,35 +7,31 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createClient } from '@supabase/supabase-js'
 import { useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
 
-const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || ""; 
+const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || ""; // CHANGE THIS BEFORE COMMIT
 
 const supabase = createClient(
   'https://dkmaapjiqiqyxbjyshky.supabase.co',
  key
 )
-export const dynamic = 'force-dynamic';
 
 export default function ChatPage(){
-  const searchParams = useSearchParams();
-  const chat_id = searchParams.get('chat');
   const { isLoaded, userId } = useAuth();  
-  const { user } = useUser();  
+  const { _, user } = useUser();  
   const [messages, setMessages] = useState<string[]>([]);
   const [text, setText] = useState('');
-
 
   useEffect(() => {
     const fetchMessages = async () => {
       const { data, error } = await supabase
         .from('message')
         .select('text')
-        .eq('conversation_id', chat_id) 
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true }); // optional: order by timestamp
+
       if (error) {
         console.error("Error fetching messages:", error);
       } else if (data) {
+        // Set messages state with the fetched messages
         setMessages(data.map((msg) => msg.text));
       }
     };
@@ -82,11 +78,10 @@ export default function ChatPage(){
     const formData = new FormData();
     formData.append("text", text);
     formData.append("user_id", userId || "");
-    formData.append("chat_id", chat_id || "");
 
     try {
       // Call the server action
-      const response = await fetch("/chat/[chat_id]/action", {
+      const response = await fetch("/chat/action", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -94,7 +89,6 @@ export default function ChatPage(){
         body: JSON.stringify({
           text,
           user_id: userId,
-          chat_id: chat_id,
         }),
       });
 

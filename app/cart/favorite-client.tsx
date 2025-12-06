@@ -1,16 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import {
-  Search as SearchIcon,
   ShoppingCart,
   Menu,
-  Sparkles,
   Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import {
   SignedIn,
@@ -19,6 +16,8 @@ import {
   SignUpButton,
   UserButton,
 } from "@clerk/nextjs";
+import SearchBar from "@/components/search-bar";
+import Image from "next/image";
 
 type ListingItem = {
   id: string;
@@ -30,8 +29,6 @@ type ListingItem = {
 };
 
 export default function FavoriteClient({ listings }: { listings: ListingItem[] }) {
-  const [query, setQuery] = useState("");
-
   return (
     <div className="min-h-screen bg-white text-slate-900">
       {/* Header */}
@@ -40,24 +37,25 @@ export default function FavoriteClient({ listings }: { listings: ListingItem[] }
           <div className="flex items-center justify-between py-3 gap-3">
             <div className="flex items-center gap-3">
               <Menu className="h-6 w-6 md:hidden" />
-              <Link href="/" className="flex items-center gap-2">
-                <div className="h-9 w-9 bg-white/10 grid place-items-center rounded-md">
-                  <Sparkles className="h-5 w-5" />
-                </div>
-                <span className="text-xl font-semibold">CollegeCart</span>
-              </Link>
+             <Link href="/" className="flex items-center gap-2">
+              <Image
+                src="/logo-white.png"
+                alt="CollegeCart Logo"
+                width={60}
+                height={60}
+                className="object-contain"
+              />
+              <span className="font-semibold text-lg">CollegeCart</span>
+            </Link> 
             </div>
 
             <div className="hidden md:flex flex-1 max-w-xl items-center gap-2">
-              <div className="relative w-full">
-                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 opacity-80" />
-                <Input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search CollegeCart"
-                  className="pl-10 h-11 rounded-full bg-white text-slate-900"
-                />
-              </div>
+              <SearchBar
+                placeholder="Search CollegeCart"
+                className="w-full"
+                inputClassName="pl-10 h-11 rounded-full bg-white text-slate-900"
+                iconClassName="h-5 w-5 opacity-80 text-slate-500"
+              />
             </div>
 
             <div className="flex items-center gap-4">
@@ -137,4 +135,3 @@ export default function FavoriteClient({ listings }: { listings: ListingItem[] }
     </div>
   );
 }
-

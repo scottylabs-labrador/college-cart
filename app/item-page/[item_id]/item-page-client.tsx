@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Heart, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Heart, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react'
@@ -19,6 +19,7 @@ import {
 } from '@clerk/nextjs';
 import Link from 'next/link';
 import Image from 'next/image';
+import SearchBar from '@/components/search-bar';
 
 type ListingData = {
   id: string;
@@ -34,7 +35,7 @@ type ListingData = {
   category: string;
 };
 
-const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY || ""; 
+const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || ""; 
 
 const supabase = createClient(
   'https://dkmaapjiqiqyxbjyshky.supabase.co',
@@ -44,7 +45,6 @@ const supabase = createClient(
 export default function ItemPageClient({ listing }: { listing: ListingData }) {
   const [isLiked, setIsLiked] = useState(false);
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const { userId, isSignedIn } = useAuth();   
 
@@ -191,16 +191,12 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
 
             {/* Search Bar */}
             <div className="flex-1 max-w-2xl mx-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="Search items..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 w-full"
-                />
-              </div>
+              <SearchBar
+                placeholder="Search items..."
+                className="w-full"
+                inputClassName="pl-10"
+                iconClassName="h-4 w-4 text-muted-foreground"
+              />
             </div>
 
             {/* Right Side Actions */}
@@ -478,4 +474,3 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
     </div>
   );
 }
-
