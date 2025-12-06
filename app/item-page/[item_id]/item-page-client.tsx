@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Heart, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Heart, ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react'
@@ -15,11 +15,9 @@ import {
   SignedOut,
   SignInButton,
   SignUpButton,
-  UserButton,
 } from '@clerk/nextjs';
-import Link from 'next/link';
-import Image from 'next/image';
-import SearchBar from '@/components/search-bar';
+import MainHeader from '@/components/main-header';
+import ChatModal from '@/components/chat-modal';
 
 type ListingData = {
   id: string;
@@ -46,7 +44,9 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
   const [isLiked, setIsLiked] = useState(false);
   const router = useRouter();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const { userId, isSignedIn } = useAuth();   
+  const { userId, isSignedIn } = useAuth();
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);   
 
   useEffect(() => {
     const fetchLike = async () => {
@@ -108,6 +108,42 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
         alert("Network error: Failed to connect to server. Please check your connection and try again.");
       }
 
+  };
+
+  const handleChat = async () => {
+    if (!isSignedIn || !userId) {
+      alert("You must be logged in to chat with the seller!");
+      return;
+    }
+
+    if (userId === listing.seller_id) {
+      alert("You cannot chat with yourself!");
+      return;
+    }
+
+    // Create or get conversation
+    try {
+      const formData = new FormData();
+      formData.append("listing_id", listing.id);
+      formData.append("buyer_id", userId);
+      formData.append("seller_id", listing.seller_id);
+
+      const response = await fetch(`/item-page/${listing.id}/action`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+      if (result.success && result.conversation_id) {
+        setConversationId(result.conversation_id.toString());
+        setIsChatOpen(true);
+      } else {
+        alert(result.error || "Failed to start conversation");
+      }
+    } catch (error) {
+      console.error("Error creating conversation:", error);
+      alert("Failed to start conversation. Please try again.");
+    }
   };
 
   const handleOffer = async(e: React.FormEvent)  => {
@@ -172,72 +208,12 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
   const currentImage = listing.imageUrls[selectedImageIndex] || '/scotty-tote-dummy.jpg';
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-white">
       {/* Header Navigation */}
-      <header className="border-b bg-background sticky top-0 z-50">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16 gap-4">
-            {/* Logo */}
-            <Link href="/" className="flex items-center gap-2">
-              <Image
-                src="/logo-blue.png"
-                alt="CollegeCart Logo"
-                width={60}
-                height={60}
-                className="object-contain"
-              />
-              <span className="font-semibold text-lg">CollegeCart</span>
-            </Link>
-
-            {/* Search Bar */}
-            <div className="flex-1 max-w-2xl mx-4">
-              <SearchBar
-                placeholder="Search items..."
-                className="w-full"
-                inputClassName="pl-10"
-                iconClassName="h-4 w-4 text-muted-foreground"
-              />
-            </div>
-
-            {/* Right Side Actions */}
-            <div className="flex items-center gap-3">
-              <SignedOut>
-                <SignInButton mode="modal">
-                  <Button variant="ghost" size="sm">
-                    Sign in
-                  </Button>
-                </SignInButton>
-                <SignUpButton mode="modal">
-                  <Button variant="ghost" size="sm">
-                    Log in
-                  </Button>
-                </SignUpButton>
-              </SignedOut>
-              <SignedIn>
-                {/* <Button
-                  variant="ghost"
-                  size="icon"
-                  className="relative"
-                  onClick={handleLike}
-                >
-                  <Heart
-                    className={`w-5 h-5 ${isLiked ? 'fill-red-500 text-red-500' : ''}`}
-                  />
-                </Button> */}
-                <Link href="/post-item">
-                  <Button variant="outline" size="sm">
-                    Sell
-                  </Button>
-                </Link>
-                <UserButton />
-              </SignedIn>
-            </div>
-          </div>
-        </div>
-      </header>
+      <MainHeader />
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Item Image */}
           <div className="w-full">
@@ -350,6 +326,15 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
                   <Heart
                     className={`w-6 h-6 ${isLiked ? 'fill-red-500 text-red-500' : ''}`}
                   />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-12 w-12"
+                  onClick={handleChat}
+                  title="Chat with seller"
+                >
+                  <MessageCircle className="w-6 h-6" />
                 </Button>
               </div>
             </div>
@@ -471,6 +456,14 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
           </Card>
         </div>
       </main>
+
+      {/* Chat Modal */}
+      <ChatModal
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+        conversationId={conversationId}
+        listingTitle={listing.title}
+      />
     </div>
   );
 }

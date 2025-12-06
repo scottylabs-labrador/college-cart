@@ -13,18 +13,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Upload, X } from 'lucide-react';
-import {
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  SignUpButton,
-  UserButton,
-} from '@clerk/nextjs';
-import Link from 'next/link';
-import Image from 'next/image';
 import RequireLogin from '@/components/require_login';
 import { useRouter } from 'next/navigation';
-import SearchBar from '@/components/search-bar';
+import MainHeader from '@/components/main-header';
+import Image from 'next/image';
 
 const MAX_IMAGES = 10;
 
@@ -160,62 +152,12 @@ export default function PostItemPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-white">
       {/* Header Navigation */}
-      <header className="border-b bg-background sticky top-0 z-50">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16 gap-4">
-            {/* Logo */}
-            <Link href="/" className="flex items-center gap-2">
-              <Image
-                src="/logo-blue.png"
-                alt="CollegeCart Logo"
-                width={60}
-                height={60}
-                className="object-contain"
-              />
-              <span className="font-semibold text-lg">CollegeCart</span>
-            </Link>
-
-            {/* Search Bar */}
-            <div className="flex-1 max-w-2xl mx-4">
-              <SearchBar
-                placeholder="Search items..."
-                className="w-full"
-                inputClassName="pl-10"
-                iconClassName="h-4 w-4 text-muted-foreground"
-              />
-            </div>
-
-            {/* Right Side Actions */}
-            <div className="flex items-center gap-3">
-              <SignedOut>
-                <SignInButton mode="modal">
-                  <Button variant="ghost" size="sm">
-                    Sign in
-                  </Button>
-                </SignInButton>
-                <SignUpButton mode="modal">
-                  <Button variant="ghost" size="sm">
-                    Log in
-                  </Button>
-                </SignUpButton>
-              </SignedOut>
-              <SignedIn>
-                <Link href="/post-item">
-                  <Button variant="outline" size="sm">
-                    Sell
-                  </Button>
-                </Link>
-                <UserButton />
-              </SignedIn>
-            </div>
-          </div>
-        </div>
-      </header>
+      <MainHeader />
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Left Column - Image Upload Section */}
