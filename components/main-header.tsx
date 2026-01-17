@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Menu, ShoppingCart } from 'lucide-react';
+import { Menu, ShoppingCart, Store } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   SignedIn,
@@ -51,9 +51,17 @@ export default function MainHeader() {
               </SignUpButton>
             </SignedOut>
             <SignedIn>
-              <UserButton />
+              <UserButton>
+                <UserButton.MenuItems>
+                  <UserButton.Link
+                    label="Items for Sale"
+                    labelIcon={<Store />}
+                    href="/create-organization"
+                  />
+                </UserButton.MenuItems>
+              </UserButton>
             </SignedIn>
-            <Link href="/cart" className="hidden md:flex"> 
+            <Link href="/cart" className="hidden md:flex">
               <ShoppingCart className="h-6 w-6" />
             </Link>
             <Link href="/post-item">

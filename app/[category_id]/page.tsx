@@ -87,7 +87,8 @@ export default function CategoryPage(){
       const { data: categoryData, error: categoryError } = await supabase
         .from('listing')
         .select('*')
-        .eq('category_id', category_id)
+        .eq('category_id, status', category_id)
+        .eq('status', 'active')
         .order("created_at", { ascending: false });
       if (categoryError){
         console.error("Error accessing category", categoryError);
