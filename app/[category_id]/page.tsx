@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-import { createClient } from '@supabase/supabase-js'
-import { useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react';
+import { createClient } from '@supabase/supabase-js';
+import { useSearchParams } from 'next/navigation';
 import CategoryClient from './category-client';
+import MainHeader from '@/components/main-header';
 
 
 type ListingImage = {
@@ -69,60 +69,89 @@ export default function CategoryPage(){
   const category_name = searchParams.get('n');
   const [categories, setCategory] = useState<ListingDisplay[]>([]);
   const [categoryName, setCategoryName] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-        const fetchCategory = async() => {
-            setCategoryName(category_name || "")
-            const { data: categoryData, error: categoryError } = await supabase
-                .from('listing')
-                .select('*')
-                .eq('category_id', category_id)
-                .order("created_at", { ascending: false });
-            if (categoryError){
-                console.error("Error accessing category", categoryError);
-                return;
-            }
+    let isActive = true;
 
-          const listingsWithImages = await Promise.all(
-          (categoryData || []).map(async (listing: Listing) => {
+    const fetchCategory = async () => {
+      setIsLoading(true);
+      setCategoryName(category_name || "");
+      if (!Number.isFinite(category_id)) {
+        if (isActive) {
+          setCategory([]);
+        }
+        return;
+      }
+
+      const { data: categoryData, error: categoryError } = await supabase
+        .from('listing')
+        .select('*')
+        .eq('category_id', category_id)
+        .order("created_at", { ascending: false });
+      if (categoryError){
+        console.error("Error accessing category", categoryError);
+        return;
+      }
+
+      const listingsWithImages = await Promise.all(
+        (categoryData || []).map(async (listing: Listing) => {
           const { data: images } = await supabase
-              .from("listing_image")
-              .select("*")
-              .eq("listing_id", listing.listing_id)
-              .order("sort_order", { ascending: true })
-              .limit(1);
-  
+            .from("listing_image")
+            .select("*")
+            .eq("listing_id", listing.listing_id)
+            .order("sort_order", { ascending: true })
+            .limit(1);
+
           let imageUrl = null;
           if (images && images.length > 0) {
-              const img = images[0] as ListingImage;
-              if (img.storage && img.storage.base64) {
+            const img = images[0] as ListingImage;
+            if (img.storage && img.storage.base64) {
               imageUrl = `data:${img.storage.type || "image/jpeg"};base64,${img.storage.base64}`;
-              }
+            }
           }
-  
+
           return {
-              id: listing.listing_id.toString(),
-              title: listing.title || "Untitled Listing",
-              price: listing.price_cents ? listing.price_cents / 100 : 0,
-              priceFormatted: formatPrice(listing.price_cents, listing.currency),
-              imageUrl: imageUrl || "/scotty-tote-dummy.jpg",
-              href: `/item-page/${listing.listing_id}`,
+            id: listing.listing_id.toString(),
+            title: listing.title || "Untitled Listing",
+            price: listing.price_cents ? listing.price_cents / 100 : 0,
+            priceFormatted: formatPrice(listing.price_cents, listing.currency),
+            imageUrl: imageUrl || "/scotty-tote-dummy.jpg",
+            href: `/item-page/${listing.listing_id}`,
           };
-          })
-  
+        })
       );
-  
-      setCategory(listingsWithImages);
-      
-      };
 
-      
-      fetchCategory();    
-  
-   }, [])
+      if (isActive) {
+        setCategory(listingsWithImages);
+      }
+    };
 
-   return <CategoryClient listings={categories} name={categoryName} />;
+    fetchCategory().finally(() => {
+      if (isActive) {
+        setIsLoading(false);
+      }
+    });
+
+    return () => {
+      isActive = false;
+    };
+  }, [category_id, category_name]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white text-slate-900">
+        <MainHeader />
+        <main className="mx-auto max-w-7xl px-4 sm:px-6 py-12">
+          <div className="flex items-center gap-3 text-slate-700">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-300 border-t-[#2f167a]" />
+            <p className="text-sm">Loading items...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  return <CategoryClient listings={categories} name={categoryName} />;
 
 }
-
-

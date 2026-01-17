@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import HomeClient from "./home-client";
+import Link from "next/link";
+import { Card } from "@/components/ui/card";
 
 /* ---------------- DATA ---------------- */
 
