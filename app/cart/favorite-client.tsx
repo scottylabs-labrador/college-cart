@@ -14,7 +14,21 @@ type ListingItem = {
   href: string;
 };
 
-export default function FavoriteClient({ listings }: { listings: ListingItem[] }) {
+type FavoriteClientProps = {
+  listings: ListingItem[];
+  title?: string;
+  emptyMessage?: string;
+  isLoading?: boolean;
+  loadingMessage?: string;
+};
+
+export default function FavoriteClient({
+  listings,
+  title = "Favorited Items",
+  emptyMessage = "No favorited items yet. Go like some items!",
+  isLoading = false,
+  loadingMessage = "Loading items...",
+}: FavoriteClientProps) {
   return (
     <div className="min-h-screen bg-white text-slate-900">
       {/* Header */}
@@ -25,10 +39,15 @@ export default function FavoriteClient({ listings }: { listings: ListingItem[] }
 
         {/* See what's selling section */}
         <div>
-          <p className="text-xl font-medium pt-4 mb-6">Favorited Items</p>
-          {listings.length === 0 ? (
+          <p className="text-xl font-medium pt-4 mb-6">{title}</p>
+          {isLoading ? (
+            <div className="flex items-center gap-3 text-slate-700 py-8">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-300 border-t-[#2f167a]" />
+              <p className="text-sm">{loadingMessage}</p>
+            </div>
+          ) : listings.length === 0 ? (
             <div className="text-center py-12 text-slate-600">
-              <p>No favorited items yet. Go like some items!</p>
+              <p>{emptyMessage}</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

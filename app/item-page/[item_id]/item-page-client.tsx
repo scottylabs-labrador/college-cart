@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Heart, ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react';
+import { Heart, ChevronLeft, ChevronRight, MessageCircle, ShoppingCart } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react'
@@ -337,7 +337,7 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
                   className="h-12 w-12"
                   onClick={handleLike}
                 >
-                  <Heart
+                  <ShoppingCart
                     className={`w-6 h-6 ${isLiked ? 'fill-red-500 text-red-500' : ''}`}
                   />
                 </Button>

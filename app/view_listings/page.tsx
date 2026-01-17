@@ -1,7 +1,12 @@
+'use client';
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { createClient } from "@supabase/supabase-js";
 import { Card } from "@/components/ui/card";
 import MainHeader from "@/components/main-header";
-import { createClient } from "@/lib/supabase/server";
+import LoadingViewListings from "./loading";
 
 type ListingImage = {
   listing_image_id: number;
@@ -55,65 +60,106 @@ function formatPrice(priceCents: number | null, currency: string | null) {
   }
 }
 
-export const dynamic = "force-dynamic";
+const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "";
 
-export default async function ViewListingsPage({
-  searchParams,
-}: {
-  searchParams: { search?: string };
-}) {
-  const supabase = await createClient();
-  searchParams = await searchParams;
-  const searchTerm =  (searchParams?.search ?? "").trim();
+const supabase = createClient(
+  "https://dkmaapjiqiqyxbjyshky.supabase.co",
+  key
+);
 
-  const baseQuery = supabase
-    .from("listing")
-    .select("*")
-    .order("created_at", { ascending: false });
+export default function ViewListingsPage() {
+  const searchParams = useSearchParams();
+  const searchTerm = (searchParams.get("search") ?? "").trim();
+  const [listings, setListings] = useState<ListingDisplay[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadedSearchTerm, setLoadedSearchTerm] = useState(searchTerm);
 
-  let listingsData: Listing[] = [];
-  let errorMessage: string | null = null;
+  useEffect(() => {
+    let isActive = true;
 
-  if (searchTerm) {
-    const { data, error } = await supabase.rpc("fuzzy_search_listings", {
-      search: searchTerm,
-    });
-    listingsData = (data ?? []) as Listing[];
-    errorMessage = error?.message ?? null;
-  } else {
-    const { data, error } = await baseQuery;
-    listingsData = (data ?? []) as Listing[];
-    errorMessage = error?.message ?? null;
-  }
+    const fetchListings = async () => {
+      setIsLoading(true);
+      setErrorMessage(null);
 
-  const listingsWithImages: ListingDisplay[] = await Promise.all(
-    listingsData.map(async (listing) => {
-      const { data: images } = await supabase
-        .from("listing_image")
+      const baseQuery = supabase
+        .from("listing")
         .select("*")
-        .eq("listing_id", listing.listing_id)
-        .order("sort_order", { ascending: true })
-        .limit(1);
+        .order("created_at", { ascending: false });
 
-      let imageUrl = null;
-      if (images && images.length > 0) {
-        const img = images[0] as ListingImage;
-        if (img.storage && img.storage.base64) {
-          imageUrl = `data:${img.storage.type || "image/jpeg"};base64,${
-            img.storage.base64
-          }`;
-        }
+      let listingsData: Listing[] = [];
+      let fetchError: string | null = null;
+
+      if (searchTerm) {
+        const { data, error } = await supabase.rpc("fuzzy_search_listings", {
+          search: searchTerm,
+        });
+        listingsData = (data ?? []) as Listing[];
+        fetchError = error?.message ?? null;
+      } else {
+        const { data, error } = await baseQuery;
+        listingsData = (data ?? []) as Listing[];
+        fetchError = error?.message ?? null;
       }
 
-      return {
-        id: listing.listing_id.toString(),
-        title: listing.title || "Untitled listing",
-        priceFormatted: formatPrice(listing.price_cents, listing.currency),
-        imageUrl: imageUrl || "/scotty-tote-dummy.jpg",
-        href: `/item-page/${listing.listing_id}`,
-      };
-    })
-  );
+      if (fetchError) {
+        if (isActive) {
+          setErrorMessage(fetchError);
+          setListings([]);
+          setLoadedSearchTerm(searchTerm);
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      const listingsWithImages: ListingDisplay[] = await Promise.all(
+        listingsData.map(async (listing) => {
+          const { data: images } = await supabase
+            .from("listing_image")
+            .select("*")
+            .eq("listing_id", listing.listing_id)
+            .order("sort_order", { ascending: true })
+            .limit(1);
+
+          let imageUrl = null;
+          if (images && images.length > 0) {
+            const img = images[0] as ListingImage;
+            if (img.storage && img.storage.base64) {
+              imageUrl = `data:${img.storage.type || "image/jpeg"};base64,${
+                img.storage.base64
+              }`;
+            }
+          }
+
+          return {
+            id: listing.listing_id.toString(),
+            title: listing.title || "Untitled listing",
+            priceFormatted: formatPrice(listing.price_cents, listing.currency),
+            imageUrl: imageUrl || "/scotty-tote-dummy.jpg",
+            href: `/item-page/${listing.listing_id}`,
+          };
+        })
+      );
+
+      if (isActive) {
+        setListings(listingsWithImages);
+        setLoadedSearchTerm(searchTerm);
+        setIsLoading(false);
+      }
+    };
+
+    fetchListings();
+
+    return () => {
+      isActive = false;
+    };
+  }, [searchTerm]);
+
+  const shouldShowLoading = isLoading || loadedSearchTerm !== searchTerm;
+
+  if (shouldShowLoading) {
+    return <LoadingViewListings />;
+  }
 
   return (
     <main className="min-h-screen bg-white text-slate-900">
@@ -129,7 +175,7 @@ export default async function ViewListingsPage({
           <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
             Could not load listings. Please refresh the page or try again later.
           </div>
-        ) : listingsWithImages.length === 0 ? (
+        ) : listings.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
             {searchTerm
               ? "No items matched that search. Try a different keyword."
@@ -137,7 +183,7 @@ export default async function ViewListingsPage({
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            {listingsWithImages.map((listing) => (
+            {listings.map((listing) => (
               <Link
                 key={listing.id}
                 href={listing.href}

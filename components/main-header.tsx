@@ -56,7 +56,7 @@ export default function MainHeader() {
                   <UserButton.Link
                     label="Items for Sale"
                     labelIcon={<Store />}
-                    href="/create-organization"
+                    href="/selling"
                   />
                 </UserButton.MenuItems>
               </UserButton>
@@ -75,4 +75,3 @@ export default function MainHeader() {
     </header>
   );
 }
-
