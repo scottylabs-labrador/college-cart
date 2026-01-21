@@ -1,14 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Heart, ChevronLeft, ChevronRight, MessageCircle, ShoppingCart } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MessageCircle, ShoppingCart, Trash2 } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import {
   SignedIn,
@@ -51,12 +50,17 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
   const router = useRouter();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const { userId, isSignedIn } = useAuth();
+  const isOwner = Boolean(isSignedIn && userId && userId === listing.seller_id);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [uncollapseTrigger, setUncollapseTrigger] = useState(0);
   const [openConfirmationTrigger, setOpenConfirmationTrigger] = useState(0);   
 
   useEffect(() => {
+    if (!userId || userId === listing.seller_id) {
+      return;
+    }
+
     const fetchLike = async () => {
       const { data, error } = await supabase
         .from('favorite')
@@ -73,12 +77,16 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
     };
 
     fetchLike();
-  }, [])
+  }, [userId, listing.id, listing.seller_id])
 
   const handleLike = async(e: React.FormEvent)  => {
     e.preventDefault();
     if(!isSignedIn || !userId){
       alert("You must be logged in to like a listing!");
+      return;
+    }
+    if (userId === listing.seller_id) {
+      alert("You cannot like your own listing!");
       return;
     }
 
@@ -207,6 +215,48 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
       }
   };
 
+  const handleDelete = async () => {
+    if (!isSignedIn || !userId) {
+      alert("You must be logged in to delete a listing!");
+      return;
+    }
+
+    if (userId !== listing.seller_id) {
+      alert("You can only delete your own listing!");
+      return;
+    }
+
+    const confirmed = window.confirm("Delete this posting? This cannot be undone.");
+    if (!confirmed) {
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("listing_id", listing.id);
+    formData.append("user_id", userId);
+
+    try {
+      const response = await fetch(`/item-page/${listing.id}/delete`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        const errorMessage = result.error || "Failed to delete listing. Please try again.";
+        alert(`Error: ${errorMessage}`);
+        console.error("Server error:", result);
+        return;
+      }
+
+      router.push("/selling");
+    } catch (error) {
+      console.error("Network error:", error);
+      alert("Network error: Failed to connect to server. Please check your connection and try again.");
+    }
+  };
+
   const handlePreviousImage = () => {
     setSelectedImageIndex((prev) => 
       prev > 0 ? prev - 1 : listing.imageUrls.length - 1
@@ -315,41 +365,63 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
 
               {/* Action Buttons */}
               <div className="flex items-center gap-3 mb-6">
-                <Button 
-                  size="lg" 
-                  className="flex-1 border-0 text-white"
-                  style={{
-                    background: 'linear-gradient(to right, #4a2db8, #a78bfa)',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'linear-gradient(to right, #3d2599, #9d7ff0)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'linear-gradient(to right, #4a2db8, #a78bfa)';
-                  }}
-                  onClick = {handleOffer}
-                >
-                  Make Offer
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-12 w-12"
-                  onClick={handleLike}
-                >
-                  <ShoppingCart
-                    className={`w-6 h-6 ${isLiked ? 'fill-red-500 text-red-500' : ''}`}
-                  />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-12 w-12"
-                  onClick={handleChat}
-                  title="Chat with seller"
-                >
-                  <MessageCircle className="w-6 h-6" />
-                </Button>
+                {isOwner ? (
+                  <Button 
+                    size="lg" 
+                    className="flex-1 border-0 text-white"
+                    style={{
+                      background: 'linear-gradient(to right, #fca5a5, #f87171)',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'linear-gradient(to right, #f87171, #ef4444)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'linear-gradient(to right, #fca5a5, #f87171)';
+                    }}
+                    onClick={handleDelete}
+                  >
+                    <Trash2 className="w-5 h-5 mr-2" />
+                    Delete Listing
+                  </Button>
+                ) : (
+                  <>
+                    <Button 
+                      size="lg" 
+                      className="flex-1 border-0 text-white"
+                      style={{
+                        background: 'linear-gradient(to right, #4a2db8, #a78bfa)',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'linear-gradient(to right, #3d2599, #9d7ff0)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'linear-gradient(to right, #4a2db8, #a78bfa)';
+                      }}
+                      onClick = {handleOffer}
+                    >
+                      Make Offer
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-12 w-12"
+                      onClick={handleLike}
+                    >
+                      <ShoppingCart
+                        className={`w-6 h-6 ${isLiked ? 'fill-red-500 text-red-500' : ''}`}
+                      />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-12 w-12"
+                      onClick={handleChat}
+                      title="Chat with seller"
+                    >
+                      <MessageCircle className="w-6 h-6" />
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
 
