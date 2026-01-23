@@ -1,4 +1,4 @@
-# College Cart
+# CollegeCart
 
 A centralized marketplace platform for the CMU community to buy and sell goods, services, and commissions. Built by [ScottyLabs Labrador](https://github.com/scottylabs-labrador).
 
