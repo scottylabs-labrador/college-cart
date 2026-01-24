@@ -1,23 +1,9 @@
 "use client";
 
-import React from "react";
 import Link from "next/link";
-import {
-  ShoppingCart,
-  Menu,
-  Clock,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Clock } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import {
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  SignUpButton,
-  UserButton,
-} from "@clerk/nextjs";
-import SearchBar from "@/components/search-bar";
-import Image from "next/image";
+import MainHeader from "@/components/main-header";
 
 type ListingItem = {
   id: string;
@@ -28,70 +14,40 @@ type ListingItem = {
   href: string;
 };
 
-export default function FavoriteClient({ listings }: { listings: ListingItem[] }) {
+type FavoriteClientProps = {
+  listings: ListingItem[];
+  title?: string;
+  emptyMessage?: string;
+  isLoading?: boolean;
+  loadingMessage?: string;
+};
+
+export default function FavoriteClient({
+  listings,
+  title = "Favorited Items",
+  emptyMessage = "No favorited items yet. Go like some items!",
+  isLoading = false,
+  loadingMessage = "Loading items...",
+}: FavoriteClientProps) {
   return (
     <div className="min-h-screen bg-white text-slate-900">
       {/* Header */}
-      <header className="bg-[#2f167a] text-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="flex items-center justify-between py-3 gap-3">
-            <div className="flex items-center gap-3">
-              <Menu className="h-6 w-6 md:hidden" />
-             <Link href="/" className="flex items-center gap-2">
-              <Image
-                src="/logo-white.png"
-                alt="CollegeCart Logo"
-                width={60}
-                height={60}
-                className="object-contain"
-              />
-              <span className="font-semibold text-lg">CollegeCart</span>
-            </Link> 
-            </div>
-
-            <div className="hidden md:flex flex-1 max-w-xl items-center gap-2">
-              <SearchBar
-                placeholder="Search CollegeCart"
-                className="w-full"
-                inputClassName="pl-10 h-11 rounded-full bg-white text-slate-900"
-                iconClassName="h-5 w-5 opacity-80 text-slate-500"
-              />
-            </div>
-
-            <div className="flex items-center gap-4">
-              <SignedOut>
-                <SignInButton />
-                <SignUpButton>
-                  <button className="bg-[#6c47ff] text-white rounded-full font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 cursor-pointer">
-                    Sign Up
-                  </button>
-                </SignUpButton>
-              </SignedOut>
-              <SignedIn>
-                <UserButton />
-              </SignedIn>
-              <Link href="/chat" className="hidden md:flex"> 
-                <ShoppingCart className="h-6 w-6" />
-              </Link>
-              <Link href="/post-item">
-                <Button className="bg-white text-[#2f167a] rounded-xl px-6">
-                  Sell
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
+      <MainHeader />
 
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 sm:px-6 py-8 space-y-10">
 
         {/* See what's selling section */}
         <div>
-          <p className="text-xl font-medium pt-4 mb-6">Favorited Items</p>
-          {listings.length === 0 ? (
+          <p className="text-xl font-medium pt-4 mb-6">{title}</p>
+          {isLoading ? (
+            <div className="flex items-center gap-3 text-slate-700 py-8">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-300 border-t-[#2f167a]" />
+              <p className="text-sm">{loadingMessage}</p>
+            </div>
+          ) : listings.length === 0 ? (
             <div className="text-center py-12 text-slate-600">
-              <p>No favorited items yet. Go like some items!</p>
+              <p>{emptyMessage}</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
