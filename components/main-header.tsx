@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Menu, ShoppingCart } from 'lucide-react';
+import { Menu, ShoppingCart, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   SignedIn,
@@ -10,10 +10,24 @@ import {
   SignInButton,
   SignUpButton,
   UserButton,
+  useAuth,
 } from '@clerk/nextjs';
 import SearchBar from '@/components/search-bar';
+import { useRouter } from 'next/navigation';
 
 export default function MainHeader() {
+  const { isSignedIn } = useAuth();
+  const router = useRouter();
+
+  const handleChatClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!isSignedIn) {
+      alert('Please sign in to access your messages');
+      return;
+    }
+    router.push('/chat');
+  };
+
   return (
     <header className="bg-[#2f167a] text-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
@@ -50,12 +64,19 @@ export default function MainHeader() {
                 </button>
               </SignUpButton>
             </SignedOut>
+            <button
+              onClick={handleChatClick}
+              className="hidden md:flex"
+              title="Messages"
+            >
+              <MessageCircle className="h-6 w-6" />
+            </button>
             <SignedIn>
+              <Link href="/cart" className="hidden md:flex" title="Cart">
+                <ShoppingCart className="h-6 w-6" />
+              </Link>
               <UserButton />
             </SignedIn>
-            <Link href="/cart" className="hidden md:flex"> 
-              <ShoppingCart className="h-6 w-6" />
-            </Link>
             <Link href="/post-item">
               <Button className="bg-white text-[#2f167a] rounded-xl px-6">
                 Sell

@@ -37,7 +37,12 @@ export async function POST(request: Request) {
       actualMessageType = "text"; // Use "text" for enum compatibility
     }
 
-    const messagePayload: any = {
+    const messagePayload: {
+      user: string;
+      text: string;
+      conversation_id: string;
+      message_type: string;
+    } = {
       user: user,
       text: messageText,
       conversation_id: chat,
