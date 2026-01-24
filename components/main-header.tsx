@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Menu, ShoppingCart, MessageCircle } from 'lucide-react';
+import { Menu, ShoppingCart, Store, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   SignedIn,
@@ -75,7 +75,15 @@ export default function MainHeader() {
               <Link href="/cart" className="hidden md:flex" title="Cart">
                 <ShoppingCart className="h-6 w-6" />
               </Link>
-              <UserButton />
+              <UserButton>
+                <UserButton.MenuItems>
+                  <UserButton.Link
+                    label="Items for Sale"
+                    labelIcon={<Store />}
+                    href="/selling"
+                  />
+                </UserButton.MenuItems>
+              </UserButton>
             </SignedIn>
             <Link href="/post-item">
               <Button className="bg-white text-[#2f167a] rounded-xl px-6">
@@ -88,4 +96,3 @@ export default function MainHeader() {
     </header>
   );
 }
-

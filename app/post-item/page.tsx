@@ -91,8 +91,8 @@ export default function PostItemPage() {
       alert("Please select a condition for your item.");
       return;
     }
-    if (imagePreviews.length === 0) {
-      alert("Please upload at least one image for your item.");
+    if (imagePreviews.length <= 1) {
+      alert("Please upload at least two images for your item.");
       return;
     }
     if (!userId) {

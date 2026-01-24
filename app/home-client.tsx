@@ -1,10 +1,65 @@
 "use client";
 
-import React from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Clock } from "lucide-react";
+import { createClient } from "@supabase/supabase-js";
 import { Card } from "@/components/ui/card";
 import MainHeader from "@/components/main-header";
+
+type ListingImage = {
+  listing_image_id: number;
+  listing_id: number;
+  storage: {
+    base64: string;
+    name: string;
+    type: string;
+  };
+  sort_order: number;
+};
+
+type Listing = {
+  listing_id: number;
+  seller_id: string;
+  title: string | null;
+  description: string | null;
+  price_cents: number | null;
+  currency: string | null;
+  condition: string | null;
+  quantity: number | null;
+  status: string | null;
+  created_at: string | null;
+};
+
+type ListingItem = {
+  id: string;
+  title: string;
+  price: number;
+  priceFormatted: string;
+  imageUrl: string;
+  href: string;
+};
+
+function formatPrice(priceCents: number | null, currency: string | null) {
+  if (priceCents === null) return "$0.00";
+  const defaultCurrency = "USD";
+  const code = currency?.toUpperCase() ?? defaultCurrency;
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: code,
+    }).format(priceCents / 100);
+  } catch {
+    return `${priceCents / 100} ${code}`;
+  }
+}
+
+const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "";
+
+const supabase = createClient(
+  "https://dkmaapjiqiqyxbjyshky.supabase.co",
+  key
+);
 
 const HERO_TILES = [
   {
@@ -109,18 +164,76 @@ function TileCard({
   );
 }
 
-type ListingItem = {
-  id: string;
-  title: string;
-  price: number;
-  priceFormatted: string;
-  imageUrl: string;
-  href: string;
-};
+export default function HomeClient() {
+  const [listings, setListings] = useState<ListingItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-export default function HomeClient({ listings }: { listings: ListingItem[] }) {
+  useEffect(() => {
+    let isActive = true;
+
+    const fetchListings = async () => {
+      setIsLoading(true);
+      try {
+        const { data: listingsData, error } = await supabase
+          .from("listing")
+          .select("*")
+          .eq("status", "active")
+          .order("created_at", { ascending: false })
+          .limit(8);
+
+        if (error) {
+          console.error("Error loading listings:", error);
+          return;
+        }
+
+        const listingsWithImages = await Promise.all(
+          (listingsData || []).map(async (listing: Listing) => {
+            const { data: images } = await supabase
+              .from("listing_image")
+              .select("*")
+              .eq("listing_id", listing.listing_id)
+              .order("sort_order", { ascending: true })
+              .limit(1);
+
+            let imageUrl = null;
+            if (images && images.length > 0) {
+              const img = images[0] as ListingImage;
+              if (img.storage && img.storage.base64) {
+                imageUrl = `data:${img.storage.type || "image/jpeg"};base64,${img.storage.base64}`;
+              }
+            }
+
+            return {
+              id: listing.listing_id.toString(),
+              title: listing.title || "Untitled Listing",
+              price: listing.price_cents ? listing.price_cents / 100 : 0,
+              priceFormatted: formatPrice(listing.price_cents, listing.currency),
+              imageUrl: imageUrl || "/scotty-tote-dummy.jpg",
+              href: `/item-page/${listing.listing_id}`,
+            };
+          })
+        );
+
+        if (isActive) {
+          setListings(listingsWithImages);
+        }
+      } finally {
+        if (isActive) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchListings();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-white text-slate-900">
+      {/* Header */}
       <MainHeader />
 
       {/* Main Content */}
@@ -142,7 +255,12 @@ export default function HomeClient({ listings }: { listings: ListingItem[] }) {
         {/* See what's selling section */}
         <div>
           <p className="text-xl font-medium pt-4 mb-6">See what's selling</p>
-          {listings.length === 0 ? (
+          {isLoading ? (
+            <div className="flex items-center gap-3 text-slate-700 py-8">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-300 border-t-[#2f167a]" />
+              <p className="text-sm">Loading items...</p>
+            </div>
+          ) : listings.length === 0 ? (
             <div className="text-center py-12 text-slate-600">
               <p>No items for sale yet. Be the first to list something!</p>
             </div>
@@ -188,4 +306,3 @@ export default function HomeClient({ listings }: { listings: ListingItem[] }) {
     </div>
   );
 }
-

@@ -1,11 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
-import { useSearchParams } from 'next/navigation';
-import CategoryClient from './category-client';
-import MainHeader from '@/components/main-header';
-
+import { useEffect, useState } from "react";
+import { createClient } from "@supabase/supabase-js";
+import { useAuth } from "@clerk/nextjs";
+import FavoriteClient from "../cart/favorite-client";
+import RequireLogin from "@/components/require_login";
 
 type ListingImage = {
   listing_image_id: number;
@@ -54,49 +53,36 @@ function formatPrice(priceCents: number | null, currency: string | null) {
   }
 }
 
-
-const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || ""; 
+const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "";
 
 const supabase = createClient(
-  'https://dkmaapjiqiqyxbjyshky.supabase.co',
- key
-)
-export const dynamic = 'force-dynamic';
+  "https://dkmaapjiqiqyxbjyshky.supabase.co",
+  key
+);
 
-export default function CategoryPage(){
-  const searchParams = useSearchParams();
-  const category_id = parseInt(searchParams.get('c') ?? "", 10);
-  const category_name = searchParams.get('n');
-  const [categories, setCategory] = useState<ListingDisplay[]>([]);
-  const [categoryName, setCategoryName] = useState("");
+export default function SellingPage() {
+  const { userId, isLoaded } = useAuth();
+  const [listings, setListings] = useState<ListingDisplay[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    let isActive = true;
 
-    const fetchCategory = async () => {
+    const fetchListings = async () => {
       setIsLoading(true);
-      setCategoryName(category_name || "");
-      if (!Number.isFinite(category_id)) {
-        if (isActive) {
-          setCategory([]);
-        }
-        return;
-      }
-
-      const { data: categoryData, error: categoryError } = await supabase
-        .from('listing')
-        .select('*')
-        .eq('category_id, status', category_id)
-        .eq('status', 'active')
+      const { data: listingsData, error } = await supabase
+        .from("listing")
+        .select("*")
+        .eq("seller_id", userId)
         .order("created_at", { ascending: false });
-      if (categoryError){
-        console.error("Error accessing category", categoryError);
+
+      if (error) {
+        console.error("Error accessing listings:", error);
+        setIsLoading(false);
         return;
       }
 
       const listingsWithImages = await Promise.all(
-        (categoryData || []).map(async (listing: Listing) => {
+        (listingsData || []).map(async (listing: Listing) => {
           const { data: images } = await supabase
             .from("listing_image")
             .select("*")
@@ -123,36 +109,23 @@ export default function CategoryPage(){
         })
       );
 
-      if (isActive) {
-        setCategory(listingsWithImages);
-      }
+      setListings(listingsWithImages);
+      setIsLoading(false);
     };
 
-    fetchCategory().finally(() => {
-      if (isActive) {
-        setIsLoading(false);
-      }
-    });
+    fetchListings();
+  }, [isLoaded, userId]);
 
-    return () => {
-      isActive = false;
-    };
-  }, [category_id, category_name]);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-white text-slate-900">
-        <MainHeader />
-        <main className="mx-auto max-w-7xl px-4 sm:px-6 py-12">
-          <div className="flex items-center gap-3 text-slate-700">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-300 border-t-[#2f167a]" />
-            <p className="text-sm">Loading items...</p>
-          </div>
-        </main>
-      </div>
-    );
+  if (!isLoaded || !userId) {
+    return <RequireLogin />;
   }
 
-  return <CategoryClient listings={categories} name={categoryName} />;
-
+  return (
+    <FavoriteClient
+      listings={listings}
+      title="Items for Sale"
+      emptyMessage="You haven't listed any items yet."
+      isLoading={isLoading}
+    />
+  );
 }

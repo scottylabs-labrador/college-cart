@@ -6,6 +6,7 @@ import { useAuth } from '@clerk/nextjs';
 import { useEffect } from 'react'
 import { useState } from 'react';
 import FavoriteClient from "./favorite-client";
+import RequireLogin from "@/components/require_login";
 
 type ListingImage = {
   listing_image_id: number;
@@ -61,16 +62,18 @@ const supabase = createClient(
  key)
 
 export default function CollegeCartHome() {
-  const { userId, isSignedIn } = useAuth();
+  const { userId, isLoaded } = useAuth();
   const [selectListings, setSelectedListings] = useState<ListingDisplay[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  if (!isLoaded || !userId) {
+    return <RequireLogin />;
+  }
 
   useEffect(() => {
-    if(!isSignedIn){
-        alert("You must be signed in to access favorites!");
-        return;
-    }
 
     const fetchFavorites = async() => {
+        setIsLoading(true);
         const { data, error } = await supabase  
             .from("favorite")
             .select("*")
@@ -78,6 +81,7 @@ export default function CollegeCartHome() {
         
         if (error) {
             console.error("Error fetching favorites:", error);
+            setIsLoading(false);
             return;
         } 
 
@@ -90,6 +94,7 @@ export default function CollegeCartHome() {
             .order("created_at", { ascending: false });
         if (listingError){
             console.error("Error accessing favorites", listingError);
+            setIsLoading(false);
             return;
         }
 
@@ -123,6 +128,7 @@ export default function CollegeCartHome() {
     );
 
     setSelectedListings(listingsWithImages);
+    setIsLoading(false);
     };
 
     fetchFavorites();
@@ -131,5 +137,5 @@ export default function CollegeCartHome() {
  }, [])
 
 
-  return <FavoriteClient listings={selectListings} />;
+  return <FavoriteClient listings={selectListings} isLoading={isLoading} />;
 }
