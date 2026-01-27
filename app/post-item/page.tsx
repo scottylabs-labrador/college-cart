@@ -261,7 +261,7 @@ export default function PostItemPage() {
                     >
                       Category
                     </label>
-                    <Select value={category} onValueChange={setCategory}>
+                    <Select value={category.toString()} onValueChange={(value) => setCategory(Number(value))}>
                       <SelectTrigger id="category" className="w-full">
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
@@ -273,6 +273,7 @@ export default function PostItemPage() {
                         <SelectItem value="5">Clothing</SelectItem>
                         <SelectItem value="6">Commute</SelectItem>
                         <SelectItem value="7">Free & Fun</SelectItem>
+                        <SelectItem value="8">Other</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

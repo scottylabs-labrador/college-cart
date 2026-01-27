@@ -469,7 +469,7 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
         </div>
 
         {/* Comments Section */}
-        <div className="mt-12">
+        {/* <div className="mt-12">
           <Card>
             <CardHeader>
               <CardTitle>Comments</CardTitle>
@@ -540,7 +540,7 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
               </SignedIn>
             </CardContent>
           </Card>
-        </div>
+        </div> */}
       </main>
 
       {/* Chat Modal */}
