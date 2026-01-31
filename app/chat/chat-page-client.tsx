@@ -25,6 +25,15 @@ export default function ChatPageClient({
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(initialSelectedId);
 
+
+  useEffect(() => {
+    setSelectedConversationId(initialSelectedId);
+  }, [initialSelectedId]);
+
+  useEffect(() => {
+    setConversations(initialConversations);
+  }, [initialConversations]);
+
   // Subscribe to new conversations
   useEffect(() => {
     const channel = supabase
