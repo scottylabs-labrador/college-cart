@@ -15,20 +15,20 @@ type ConfirmationDialogProps = {
 export default function ConfirmationDialog({ isOpen, onClose, onSend }: ConfirmationDialogProps) {
   const [date, setDate] = useState('');
   const [location, setLocation] = useState('');
-  const [price, setPrice] = useState('$0.00');
+  const [price, setPrice] = useState('');
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value;
     
-    // Remove all non-digit characters except decimal point
+    // Strip everything except digits and decimal point
     value = value.replace(/[^\d.]/g, '');
     
-    // Remove leading zeros (but keep one zero if it's just "0" or "0.")
-    if (value.length > 1 && value.startsWith('0') && !value.startsWith('0.')) {
-      value = value.replace(/^0+/, '') || '0';
+    // Remove leading zeros (keep "0." for decimals like "0.50")
+    if (value.length > 1 && value.startsWith('0') && value[1] !== '.') {
+      value = value.replace(/^0+/, '');
     }
     
-    // Ensure only one decimal point
+    // Only allow one decimal point
     const parts = value.split('.');
     if (parts.length > 2) {
       value = parts[0] + '.' + parts.slice(1).join('');
@@ -39,28 +39,28 @@ export default function ConfirmationDialog({ isOpen, onClose, onSend }: Confirma
       value = parts[0] + '.' + parts[1].substring(0, 2);
     }
     
-    // Format with $ prefix and ensure .00 if no decimals
-    if (value === '' || value === '.') {
-      setPrice('$0.00');
-    } else if (!value.includes('.')) {
-      setPrice(`$${value}.00`);
-    } else if (value.endsWith('.')) {
-      setPrice(`$${value}00`);
-    } else if (parts.length === 2 && parts[1].length === 1) {
-      setPrice(`$${value}0`);
+    setPrice(value);
+  };
+
+  const handlePriceBlur = () => {
+    if (!price) return;
+    // Format nicely on blur: ensure two decimal places
+    const num = parseFloat(price);
+    if (!isNaN(num) && num > 0) {
+      setPrice(num.toFixed(2));
     } else {
-      setPrice(`$${value}`);
+      setPrice('');
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const priceValue = price.replace('$', '').trim();
-    if (date.trim() && location.trim() && priceValue && priceValue !== '0.00') {
-      onSend(date.trim(), location.trim(), price);
+    const numericPrice = parseFloat(price);
+    if (date.trim() && location.trim() && !isNaN(numericPrice) && numericPrice > 0) {
+      onSend(date.trim(), location.trim(), `$${numericPrice.toFixed(2)}`);
       setDate('');
       setLocation('');
-      setPrice('$0.00');
+      setPrice('');
       onClose();
     }
   };
@@ -113,14 +113,20 @@ export default function ConfirmationDialog({ isOpen, onClose, onSend }: Confirma
               <label htmlFor="price" className="text-sm font-medium">
                 Price:
               </label>
-              <Input
-                id="price"
-                type="text"
-                value={price}
-                onChange={handlePriceChange}
-                placeholder="$0.00"
-                required
-              />
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
+                <Input
+                  id="price"
+                  type="text"
+                  inputMode="decimal"
+                  value={price}
+                  onChange={handlePriceChange}
+                  onBlur={handlePriceBlur}
+                  placeholder="0.00"
+                  className="pl-7"
+                  required
+                />
+              </div>
             </div>
             <div className="flex gap-3 pt-4">
               <Button

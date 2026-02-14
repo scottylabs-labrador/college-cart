@@ -12,6 +12,7 @@ export type Message = {
   };
   confirmation_response_to?: number;
   confirmation_response?: string;
+  system_event?: 'confirmation_accepted' | 'confirmation_declined' | 'item_sold';
 };
 
 export type Conversation = {

@@ -57,15 +57,50 @@ export default function ConversationView({
         }) => {
           try {
             const parsed = JSON.parse(msg.text);
-            if (parsed.type === 'confirmation' || parsed.type === 'confirmation_response') {
+            if (parsed.type === 'confirmation') {
               return {
                 ...msg,
                 text: parsed.displayText || msg.text,
-                confirmation_data: parsed.type === 'confirmation' ? {
+                confirmation_data: {
                   date: parsed.date,
                   location: parsed.location,
                   price: parsed.price,
-                } : undefined,
+                },
+              };
+            }
+            if (parsed.type === 'confirmation_accepted') {
+              return {
+                ...msg,
+                text: '',
+                system_event: 'confirmation_accepted' as const,
+                confirmation_data: {
+                  date: parsed.date,
+                  location: parsed.location,
+                  price: parsed.price,
+                },
+                confirmation_response_to: parsed.response_to,
+              };
+            }
+            if (parsed.type === 'confirmation_declined') {
+              return {
+                ...msg,
+                text: '',
+                system_event: 'confirmation_declined' as const,
+                confirmation_response_to: parsed.response_to,
+              };
+            }
+            if (parsed.type === 'item_sold') {
+              return {
+                ...msg,
+                text: '',
+                system_event: 'item_sold' as const,
+              };
+            }
+            // Legacy confirmation_response — treat as regular message
+            if (parsed.type === 'confirmation_response') {
+              return {
+                ...msg,
+                text: parsed.displayText || msg.text,
                 confirmation_response_to: parsed.response_to,
                 confirmation_response: parsed.response,
               };
@@ -100,20 +135,38 @@ export default function ConversationView({
             created_at: string;
             message_type?: string;
           };
-          // Parse confirmation data by checking if text is JSON with confirmation type
+          // Parse message data by checking if text is JSON with a known type
           try {
             const parsed = JSON.parse(newMsg.text);
-            if (parsed.type === 'confirmation' || parsed.type === 'confirmation_response') {
+            if (parsed.type === 'confirmation') {
               const parsedMsg = {
                 ...newMsg,
                 text: parsed.displayText || newMsg.text,
-                confirmation_data: parsed.type === 'confirmation' ? {
-                  date: parsed.date,
-                  location: parsed.location,
-                  price: parsed.price,
-                } : undefined,
+                confirmation_data: { date: parsed.date, location: parsed.location, price: parsed.price },
+              };
+              setMessages((prev) => [...prev, parsedMsg as Message]);
+            } else if (parsed.type === 'confirmation_accepted') {
+              const parsedMsg = {
+                ...newMsg,
+                text: '',
+                system_event: 'confirmation_accepted' as const,
+                confirmation_data: { date: parsed.date, location: parsed.location, price: parsed.price },
                 confirmation_response_to: parsed.response_to,
-                confirmation_response: parsed.response,
+              };
+              setMessages((prev) => [...prev, parsedMsg as Message]);
+            } else if (parsed.type === 'confirmation_declined') {
+              const parsedMsg = {
+                ...newMsg,
+                text: '',
+                system_event: 'confirmation_declined' as const,
+                confirmation_response_to: parsed.response_to,
+              };
+              setMessages((prev) => [...prev, parsedMsg as Message]);
+            } else if (parsed.type === 'item_sold') {
+              const parsedMsg = {
+                ...newMsg,
+                text: '',
+                system_event: 'item_sold' as const,
               };
               setMessages((prev) => [...prev, parsedMsg as Message]);
             } else {
@@ -230,6 +283,9 @@ export default function ConversationView({
     }
   };
 
+  // Check if this chat has been deactivated (item sold to someone else)
+  const isChatInactive = messages.some(m => m.system_event === 'item_sold');
+
   // Empty state when no conversation selected
   if (!conversationId) {
     return (
@@ -280,13 +336,19 @@ export default function ConversationView({
 
       {/* Input */}
       <div className="p-4 border-t">
-        <ChatInput
-          conversationId={conversationId}
-          userId={userId}
-          loading={loading}
-          onSend={handleSendMessage}
-          onSendConfirmation={handleSendConfirmation}
-        />
+        {isChatInactive ? (
+          <div className="text-center text-sm text-muted-foreground py-2">
+            This conversation is no longer active.
+          </div>
+        ) : (
+          <ChatInput
+            conversationId={conversationId}
+            userId={userId}
+            loading={loading}
+            onSend={handleSendMessage}
+            onSendConfirmation={handleSendConfirmation}
+          />
+        )}
       </div>
     </div>
   );

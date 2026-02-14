@@ -39,13 +39,19 @@ export async function getConversations(userId: string) {
 
       const user_role = (conv.buyer_id === userId ? 'buyer' : 'seller') as 'buyer' | 'seller';
       
-      // JSON parsing logic for confirmations...
+      // JSON parsing logic for special message types
       let lastMessageText = lastMessage?.text || null;
       if (lastMessageText) {
           try {
             const parsed = JSON.parse(lastMessageText);
             if (parsed.type === 'confirmation') {
               lastMessageText = 'Sent a confirmation request';
+            } else if (parsed.type === 'confirmation_accepted') {
+              lastMessageText = 'Sale confirmed';
+            } else if (parsed.type === 'confirmation_declined') {
+              lastMessageText = 'Confirmation declined';
+            } else if (parsed.type === 'item_sold') {
+              lastMessageText = 'Item has been sold';
             } else if (parsed.type === 'confirmation_response') {
               lastMessageText = `Response: ${parsed.response === 'yes' ? 'Yes' : 'No'}`;
             }

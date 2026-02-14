@@ -24,8 +24,8 @@ export default function PostItemPage() {
   const { isLoaded, userId } = useAuth();
   const router = useRouter();
   const [category, setCategory] = useState(0);
-  const [price, setPrice] = useState(0.0);
-  const [quantity, setQuantity] = useState(0);
+  const [price, setPrice] = useState('');
+  const [quantity, setQuantity] = useState('');
   const [condition, setCondition] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -79,11 +79,11 @@ export default function PostItemPage() {
       alert("Please enter a description for your item.");
       return;
     }
-    if (price <= 0) {
+    if (!price || parseFloat(price) <= 0) {
       alert("Please enter a valid price greater than 0.");
       return;
     }
-    if (quantity <= 0) {
+    if (!quantity || parseInt(quantity) <= 0) {
       alert("Please enter a valid quantity greater than 0.");
       return;
     }
@@ -103,9 +103,9 @@ export default function PostItemPage() {
     const formData = new FormData();
     formData.append("title", title);
     formData.append("description", description);
-    formData.append("price_cents", Math.round(price * 100).toString());
+    formData.append("price_cents", Math.round(parseFloat(price) * 100).toString());
     formData.append("condition", condition);
-    formData.append("quantity", Math.round(quantity).toString());
+    formData.append("quantity", Math.round(parseInt(quantity)).toString());
     formData.append("status", "active"); 
     formData.append("user_id", userId || "");
     formData.append("category", (category).toString());
@@ -290,8 +290,9 @@ export default function PostItemPage() {
                       id="quantity"
                       type="number"
                       value={quantity}
-                      onChange={(e) => setQuantity(Number(e.target.value))}
+                      onChange={(e) => setQuantity(e.target.value)}
                       placeholder="e.g., 1, 2, 3"
+                      min="1"
                       className="w-full"
                     />
                   </div>
@@ -309,8 +310,9 @@ export default function PostItemPage() {
                       type="number"
                       step="0.01"
                       value={price}
-                      onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
+                      onChange={(e) => setPrice(e.target.value)}
                       placeholder="e.g., 19.99"
+                      min="0.01"
                       className="w-full"
                     />
                   </div>

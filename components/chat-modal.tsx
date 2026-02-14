@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { X, Send, ChevronDown, ChevronUp, CheckCircle } from 'lucide-react';
+import { X, Send, ChevronDown, ChevronUp, CheckCircle, CheckCircle2, XCircle, ShoppingBag } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import { useAuth, useUser } from '@clerk/nextjs';
 import ConfirmationDialog from './confirmation-dialog';
@@ -24,8 +24,12 @@ type Message = {
   confirmation_data?: {
     date: string;
     location: string;
+    price?: string;
     response?: string;
   };
+  confirmation_response_to?: number;
+  confirmation_response?: string;
+  system_event?: 'confirmation_accepted' | 'confirmation_declined' | 'item_sold';
 };
 
 type ChatModalProps = {
@@ -74,20 +78,42 @@ export default function ChatModal({ isOpen, onClose, conversationId, listingTitl
       if (error) {
         console.error("Error fetching messages:", error);
       } else if (data) {
-        // Parse confirmation data from JSON in text field
-        // Detect confirmation messages by parsing JSON, not by message_type
+        // Parse JSON-encoded messages into typed Message objects
         const parsedMessages = data.map((msg: any) => {
           try {
             const parsed = JSON.parse(msg.text);
-            if (parsed.type === 'confirmation' || parsed.type === 'confirmation_response') {
+            if (parsed.type === 'confirmation') {
               return {
                 ...msg,
                 text: parsed.displayText || msg.text,
-                confirmation_data: parsed.type === 'confirmation' ? {
-                  date: parsed.date,
-                  location: parsed.location,
-                  price: parsed.price,
-                } : undefined,
+                confirmation_data: { date: parsed.date, location: parsed.location, price: parsed.price },
+              };
+            }
+            if (parsed.type === 'confirmation_accepted') {
+              return {
+                ...msg,
+                text: '',
+                system_event: 'confirmation_accepted' as const,
+                confirmation_data: { date: parsed.date, location: parsed.location, price: parsed.price },
+                confirmation_response_to: parsed.response_to,
+              };
+            }
+            if (parsed.type === 'confirmation_declined') {
+              return {
+                ...msg,
+                text: '',
+                system_event: 'confirmation_declined' as const,
+                confirmation_response_to: parsed.response_to,
+              };
+            }
+            if (parsed.type === 'item_sold') {
+              return { ...msg, text: '', system_event: 'item_sold' as const };
+            }
+            // Legacy confirmation_response
+            if (parsed.type === 'confirmation_response') {
+              return {
+                ...msg,
+                text: parsed.displayText || msg.text,
                 confirmation_response_to: parsed.response_to,
                 confirmation_response: parsed.response,
               };
@@ -116,21 +142,35 @@ export default function ChatModal({ isOpen, onClose, conversationId, listingTitl
         },
         (payload) => {
           const newMsg = payload.new as any;
-          // Parse confirmation data by checking if text is JSON with confirmation type
+          // Parse message data by checking if text is JSON with a known type
           try {
             const parsed = JSON.parse(newMsg.text);
-            if (parsed.type === 'confirmation' || parsed.type === 'confirmation_response') {
+            if (parsed.type === 'confirmation') {
               const parsedMsg = {
                 ...newMsg,
                 text: parsed.displayText || newMsg.text,
-                confirmation_data: parsed.type === 'confirmation' ? {
-                  date: parsed.date,
-                  location: parsed.location,
-                  price: parsed.price,
-                } : undefined,
-                confirmation_response_to: parsed.response_to,
-                confirmation_response: parsed.response,
+                confirmation_data: { date: parsed.date, location: parsed.location, price: parsed.price },
               };
+              setMessages((prev) => [...prev, parsedMsg as Message]);
+            } else if (parsed.type === 'confirmation_accepted') {
+              const parsedMsg = {
+                ...newMsg,
+                text: '',
+                system_event: 'confirmation_accepted' as const,
+                confirmation_data: { date: parsed.date, location: parsed.location, price: parsed.price },
+                confirmation_response_to: parsed.response_to,
+              };
+              setMessages((prev) => [...prev, parsedMsg as Message]);
+            } else if (parsed.type === 'confirmation_declined') {
+              const parsedMsg = {
+                ...newMsg,
+                text: '',
+                system_event: 'confirmation_declined' as const,
+                confirmation_response_to: parsed.response_to,
+              };
+              setMessages((prev) => [...prev, parsedMsg as Message]);
+            } else if (parsed.type === 'item_sold') {
+              const parsedMsg = { ...newMsg, text: '', system_event: 'item_sold' as const };
               setMessages((prev) => [...prev, parsedMsg as Message]);
             } else {
               setMessages((prev) => [...prev, newMsg as Message]);
@@ -323,7 +363,64 @@ export default function ChatModal({ isOpen, onClose, conversationId, listingTitl
             ) : (
               messages.map((msg) => {
                 const isOwnMessage = msg.user === userId;
-                // Check if message is a confirmation by trying to parse JSON
+
+                {/* ── System event: confirmation accepted ── */}
+                if (msg.system_event === 'confirmation_accepted') {
+                  return (
+                    <div key={msg.message_id} className="flex justify-center my-3">
+                      <div className="w-full max-w-[90%] rounded-lg border border-green-200 bg-green-50 overflow-hidden">
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-green-100 border-b border-green-200">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-green-600 flex-shrink-0" />
+                          <span className="text-xs font-semibold text-green-800">Sale Confirmed</span>
+                        </div>
+                        {msg.confirmation_data && (
+                          <div className="px-3 py-2 space-y-0.5 text-xs text-green-900">
+                            <div className="flex">
+                              <span className="font-medium min-w-[65px]">Date:</span>
+                              <span>{msg.confirmation_data.date}</span>
+                            </div>
+                            <div className="flex">
+                              <span className="font-medium min-w-[65px]">Location:</span>
+                              <span>{msg.confirmation_data.location}</span>
+                            </div>
+                            {msg.confirmation_data.price && (
+                              <div className="flex">
+                                <span className="font-medium min-w-[65px]">Price:</span>
+                                <span>{msg.confirmation_data.price}</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                }
+
+                {/* ── System event: confirmation declined ── */}
+                if (msg.system_event === 'confirmation_declined') {
+                  return (
+                    <div key={msg.message_id} className="flex justify-center my-2">
+                      <div className="flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1">
+                        <XCircle className="h-3.5 w-3.5 text-red-500 flex-shrink-0" />
+                        <span className="text-xs font-medium text-red-700">Confirmation declined</span>
+                      </div>
+                    </div>
+                  );
+                }
+
+                {/* ── System event: item sold ── */}
+                if (msg.system_event === 'item_sold') {
+                  return (
+                    <div key={msg.message_id} className="flex justify-center my-3">
+                      <div className="flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2">
+                        <ShoppingBag className="h-4 w-4 text-amber-600 flex-shrink-0" />
+                        <span className="text-xs font-medium text-amber-800">This item has already been sold</span>
+                      </div>
+                    </div>
+                  );
+                }
+
+                {/* ── Confirmation request card ── */}
                 let isConfirmation = false;
                 try {
                   const parsed = JSON.parse(msg.text);
@@ -332,7 +429,6 @@ export default function ChatModal({ isOpen, onClose, conversationId, listingTitl
                   isConfirmation = msg.text?.includes('Confirmation Request:');
                 }
                 
-                // Parse confirmation data from text if message_type is confirmation
                 let confirmationData = msg.confirmation_data;
                 if (isConfirmation && !confirmationData && msg.text) {
                   const dateMatch = msg.text.match(/Date: (.+)/);
@@ -347,17 +443,17 @@ export default function ChatModal({ isOpen, onClose, conversationId, listingTitl
                   }
                 }
 
-                // Check if this message has been responded to
-                const hasResponse = messages.some(m => 
-                  m.message_type === 'confirmation_response' && 
-                  (m as any).confirmation_response_to === msg.message_id
+                // Check if this confirmation has been accepted or declined
+                const acceptedMsg = messages.find(m =>
+                  m.system_event === 'confirmation_accepted' &&
+                  m.confirmation_response_to === msg.message_id
                 );
-                const response = hasResponse 
-                  ? messages.find(m => 
-                      m.message_type === 'confirmation_response' && 
-                      (m as any).confirmation_response_to === msg.message_id
-                    )?.text?.includes('Yes') ? 'yes' : 'no'
-                  : null;
+                const declinedMsg = messages.find(m =>
+                  m.system_event === 'confirmation_declined' &&
+                  m.confirmation_response_to === msg.message_id
+                );
+                const responseStatus: 'accepted' | 'declined' | null =
+                  acceptedMsg ? 'accepted' : declinedMsg ? 'declined' : null;
 
                 if (isConfirmation && confirmationData) {
                   return (
@@ -384,11 +480,13 @@ export default function ChatModal({ isOpen, onClose, conversationId, listingTitl
                             )}
                           </div>
                         </div>
-                        {response ? (
-                          <div className="bg-muted px-3 py-2 border-t">
-                            <span className="text-xs text-muted-foreground">
-                              Response: <span className="font-medium capitalize">{response}</span>
-                            </span>
+                        {responseStatus === 'accepted' ? (
+                          <div className="bg-green-50 px-3 py-2 border-t border-green-200">
+                            <span className="text-xs font-medium text-green-700">Accepted</span>
+                          </div>
+                        ) : responseStatus === 'declined' ? (
+                          <div className="bg-red-50 px-3 py-2 border-t border-red-200">
+                            <span className="text-xs font-medium text-red-700">Declined</span>
                           </div>
                         ) : !isOwnMessage ? (
                           <div className="bg-muted px-3 py-2 border-t flex gap-2">
@@ -421,6 +519,7 @@ export default function ChatModal({ isOpen, onClose, conversationId, listingTitl
                   );
                 }
 
+                {/* ── Regular text message ── */}
                 return (
                   <div
                     key={msg.message_id}
@@ -448,40 +547,46 @@ export default function ChatModal({ isOpen, onClose, conversationId, listingTitl
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input with integrated button */}
-          <div className="space-y-2">
-            <form onSubmit={handleSubmit} className="relative">
-              <Input
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                placeholder="Type your message..."
-                className="pr-12"
-                disabled={loading}
-              />
+          {/* Input — disabled when item is sold */}
+          {messages.some(m => m.system_event === 'item_sold') ? (
+            <div className="text-center text-xs text-muted-foreground py-2">
+              This conversation is no longer active.
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <form onSubmit={handleSubmit} className="relative">
+                <Input
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  placeholder="Type your message..."
+                  className="pr-12"
+                  disabled={loading}
+                />
+                <Button
+                  type="submit"
+                  disabled={loading || !text.trim()}
+                  size="icon"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 border-0 text-white"
+                  style={{
+                    background: 'linear-gradient(to right, #4a2db8, #a78bfa)',
+                  }}
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </form>
               <Button
-                type="submit"
-                disabled={loading || !text.trim()}
-                size="icon"
-                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 border-0 text-white"
-                style={{
-                  background: 'linear-gradient(to right, #4a2db8, #a78bfa)',
-                }}
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowConfirmationDialog(true)}
+                className="w-full text-xs"
+                disabled={loading}
               >
-                <Send className="h-4 w-4" />
+                <CheckCircle className="h-3 w-3 mr-2" />
+                Send Confirmation
               </Button>
-            </form>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setShowConfirmationDialog(true)}
-              className="w-full text-xs"
-              disabled={loading}
-            >
-              <CheckCircle className="h-3 w-3 mr-2" />
-              Send Confirmation
-            </Button>
-          </div>
+            </div>
+          )}
           
           {/* Confirmation Dialog */}
           <ConfirmationDialog

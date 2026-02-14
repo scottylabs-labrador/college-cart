@@ -85,6 +85,7 @@ export default function ViewListingsPage() {
       const baseQuery = supabase
         .from("listing")
         .select("*")
+        .eq("status", "active")
         .order("created_at", { ascending: false });
 
       let listingsData: Listing[] = [];
@@ -94,7 +95,10 @@ export default function ViewListingsPage() {
         const { data, error } = await supabase.rpc("fuzzy_search_listings", {
           search: searchTerm,
         });
-        listingsData = (data ?? []) as Listing[];
+        // Filter to only active listings (RPC may return all statuses)
+        listingsData = ((data ?? []) as Listing[]).filter(
+          (l) => l.status === "active"
+        );
         fetchError = error?.message ?? null;
       } else {
         const { data, error } = await baseQuery;

@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Message } from '@/types/chat';
+import { CheckCircle2, XCircle, ShoppingBag } from 'lucide-react';
 
 type ChatMessageListProps = {
   messages: Message[];
@@ -36,7 +37,63 @@ export default function ChatMessageList({
       {messages.map((msg) => {
         const isOwnMessage = msg.user === userId;
 
-        // Check if message is a confirmation by trying to parse JSON
+        // ── System event: confirmation accepted ──
+        if (msg.system_event === 'confirmation_accepted') {
+          return (
+            <div key={msg.message_id} className="flex justify-center my-4">
+              <div className="w-full max-w-sm rounded-lg border border-green-200 bg-green-50 overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-2 bg-green-100 border-b border-green-200">
+                  <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  <span className="text-sm font-semibold text-green-800">Sale Confirmed</span>
+                </div>
+                {msg.confirmation_data && (
+                  <div className="px-4 py-3 space-y-1 text-sm text-green-900">
+                    <div className="flex">
+                      <span className="font-medium min-w-[80px]">Date:</span>
+                      <span>{msg.confirmation_data.date}</span>
+                    </div>
+                    <div className="flex">
+                      <span className="font-medium min-w-[80px]">Location:</span>
+                      <span>{msg.confirmation_data.location}</span>
+                    </div>
+                    {msg.confirmation_data.price && (
+                      <div className="flex">
+                        <span className="font-medium min-w-[80px]">Price:</span>
+                        <span>{msg.confirmation_data.price}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        }
+
+        // ── System event: confirmation declined ──
+        if (msg.system_event === 'confirmation_declined') {
+          return (
+            <div key={msg.message_id} className="flex justify-center my-3">
+              <div className="flex items-center gap-2 rounded-full border border-red-200 bg-red-50 px-4 py-1.5">
+                <XCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
+                <span className="text-xs font-medium text-red-700">Confirmation declined</span>
+              </div>
+            </div>
+          );
+        }
+
+        // ── System event: item sold (other conversation) ──
+        if (msg.system_event === 'item_sold') {
+          return (
+            <div key={msg.message_id} className="flex justify-center my-4">
+              <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-5 py-3">
+                <ShoppingBag className="h-5 w-5 text-amber-600 flex-shrink-0" />
+                <span className="text-sm font-medium text-amber-800">This item has already been sold</span>
+              </div>
+            </div>
+          );
+        }
+
+        // ── Confirmation request card ──
         let isConfirmation = false;
         try {
           const parsed = JSON.parse(msg.text);
@@ -45,7 +102,6 @@ export default function ChatMessageList({
           isConfirmation = msg.text?.includes('Confirmation Request:');
         }
 
-        // Parse confirmation data from text if message_type is confirmation
         let confirmationData = msg.confirmation_data;
         if (isConfirmation && !confirmationData && msg.text) {
           const dateMatch = msg.text.match(/Date: (.+)/);
@@ -60,19 +116,18 @@ export default function ChatMessageList({
           }
         }
 
-        // Check if this message has been responded to
-        const hasResponse = messages.some(m =>
-          m.message_type === 'confirmation_response' &&
+        // Check if this confirmation has been accepted or declined
+        const acceptedMsg = messages.find(m =>
+          m.system_event === 'confirmation_accepted' &&
           m.confirmation_response_to === msg.message_id
         );
-        const response = hasResponse
-          ? messages.find(m =>
-              m.message_type === 'confirmation_response' &&
-              m.confirmation_response_to === msg.message_id
-            )?.text?.includes('Yes') ? 'yes' : 'no'
-          : null;
+        const declinedMsg = messages.find(m =>
+          m.system_event === 'confirmation_declined' &&
+          m.confirmation_response_to === msg.message_id
+        );
+        const responseStatus: 'accepted' | 'declined' | null =
+          acceptedMsg ? 'accepted' : declinedMsg ? 'declined' : null;
 
-        // Render confirmation message
         if (isConfirmation && confirmationData) {
           return (
             <div
@@ -98,11 +153,13 @@ export default function ChatMessageList({
                     )}
                   </div>
                 </div>
-                {response ? (
-                  <div className="bg-muted px-3 py-2 border-t">
-                    <span className="text-xs text-muted-foreground">
-                      Response: <span className="font-medium capitalize">{response}</span>
-                    </span>
+                {responseStatus === 'accepted' ? (
+                  <div className="bg-green-50 px-3 py-2 border-t border-green-200">
+                    <span className="text-xs font-medium text-green-700">Accepted</span>
+                  </div>
+                ) : responseStatus === 'declined' ? (
+                  <div className="bg-red-50 px-3 py-2 border-t border-red-200">
+                    <span className="text-xs font-medium text-red-700">Declined</span>
                   </div>
                 ) : !isOwnMessage && onConfirmationResponse ? (
                   <div className="bg-muted px-3 py-2 border-t flex gap-2">
@@ -137,7 +194,7 @@ export default function ChatMessageList({
           );
         }
 
-        // Render regular text message
+        // ── Regular text message ──
         return (
           <div
             key={msg.message_id}

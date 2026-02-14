@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
 import { Conversation } from '@/types/chat';
 import ConversationSidebar from '@/components/chat/conversation-sidebar';
 import ConversationView from '@/components/chat/conversation-view';
@@ -21,18 +20,23 @@ export default function ChatPageClient({
   userId,
   initialSelectedId = null,
 }: ChatPageClientProps) {
-  const router = useRouter();
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(initialSelectedId);
-
-
-  useEffect(() => {
-    setSelectedConversationId(initialSelectedId);
-  }, [initialSelectedId]);
 
   useEffect(() => {
     setConversations(initialConversations);
   }, [initialConversations]);
+
+  // Handle browser back/forward buttons
+  const handlePopState = useCallback(() => {
+    const match = window.location.pathname.match(/^\/chat\/(.+)$/);
+    setSelectedConversationId(match ? match[1] : null);
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [handlePopState]);
 
   // Subscribe to new conversations
   useEffect(() => {
@@ -94,13 +98,13 @@ export default function ChatPageClient({
 
   const handleSelectConversation = (conversationId: string) => {
     setSelectedConversationId(conversationId);
-    // Update URL
-    router.push(`/chat/${conversationId}`);
+    // Update URL without triggering a server navigation
+    window.history.pushState(null, '', `/chat/${conversationId}`);
   };
 
   const handleBack = () => {
     setSelectedConversationId(null);
-    router.push('/chat');
+    window.history.pushState(null, '', '/chat');
   };
 
   return (

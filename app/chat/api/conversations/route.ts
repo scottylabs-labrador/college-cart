@@ -61,13 +61,19 @@ export async function GET() {
         // Determine user's role in this conversation
         const user_role = conv.buyer_id === userId ? 'buyer' : 'seller';
 
-        // Parse last message if it's JSON (confirmation message)
+        // Parse last message if it's JSON (special message types)
         let lastMessageText = lastMessage?.text || null;
         if (lastMessageText) {
           try {
             const parsed = JSON.parse(lastMessageText);
             if (parsed.type === 'confirmation') {
               lastMessageText = 'Sent a confirmation request';
+            } else if (parsed.type === 'confirmation_accepted') {
+              lastMessageText = 'Sale confirmed';
+            } else if (parsed.type === 'confirmation_declined') {
+              lastMessageText = 'Confirmation declined';
+            } else if (parsed.type === 'item_sold') {
+              lastMessageText = 'Item has been sold';
             } else if (parsed.type === 'confirmation_response') {
               lastMessageText = `Response: ${parsed.response === 'yes' ? 'Yes' : 'No'}`;
             }
