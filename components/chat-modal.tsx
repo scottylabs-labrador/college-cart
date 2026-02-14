@@ -574,26 +574,30 @@ export default function ChatModal({ isOpen, onClose, conversationId, listingTitl
                   <Send className="h-4 w-4" />
                 </Button>
               </form>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setShowConfirmationDialog(true)}
-                className="w-full text-xs"
-                disabled={loading}
-              >
-                <CheckCircle className="h-3 w-3 mr-2" />
-                Send Confirmation
-              </Button>
+              {!messages.some(m => m.system_event === 'confirmation_accepted') && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowConfirmationDialog(true)}
+                  className="w-full text-xs"
+                  disabled={loading}
+                >
+                  <CheckCircle className="h-3 w-3 mr-2" />
+                  Send Confirmation
+                </Button>
+              )}
             </div>
           )}
           
           {/* Confirmation Dialog */}
-          <ConfirmationDialog
-            isOpen={showConfirmationDialog}
-            onClose={() => setShowConfirmationDialog(false)}
-            onSend={handleSendConfirmation}
-          />
+          {!messages.some(m => m.system_event === 'confirmation_accepted') && (
+            <ConfirmationDialog
+              isOpen={showConfirmationDialog}
+              onClose={() => setShowConfirmationDialog(false)}
+              onSend={handleSendConfirmation}
+            />
+          )}
         </CardContent>
       </Card>
     </div>

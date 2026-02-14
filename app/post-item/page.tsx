@@ -30,6 +30,7 @@ export default function PostItemPage() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [imagePreviews, setImagePreviews] = useState<Array<{ url: string; file: File }>>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -69,6 +70,7 @@ export default function PostItemPage() {
 
   const handleSubmit = async(e: React.FormEvent) =>{
     e.preventDefault();
+    if (isSubmitting) return;
     
     // Frontend validation
     if (!title.trim()) {
@@ -116,6 +118,7 @@ export default function PostItemPage() {
       formData.append("images", image.file);
     });
 
+    setIsSubmitting(true);
     try {
       // Call the server action
       const response = await fetch("/post-item/action", {
@@ -144,6 +147,8 @@ export default function PostItemPage() {
     } catch (error) {
       console.error("Network error:", error);
       alert("Network error: Failed to connect to server. Please check your connection and try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -362,20 +367,27 @@ export default function PostItemPage() {
                     <Button
                       type="submit"
                       size="lg"
+                      disabled={isSubmitting}
                       className="w-full border-0 text-white"
                       style={{
-                        background: 'linear-gradient(to right, #4a2db8, #a78bfa)',
+                        background: isSubmitting
+                          ? '#8b7bc8'
+                          : 'linear-gradient(to right, #4a2db8, #a78bfa)',
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.background =
-                          'linear-gradient(to right, #3d2599, #9d7ff0)';
+                        if (!isSubmitting) {
+                          e.currentTarget.style.background =
+                            'linear-gradient(to right, #3d2599, #9d7ff0)';
+                        }
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.background =
-                          'linear-gradient(to right, #4a2db8, #a78bfa)';
+                        if (!isSubmitting) {
+                          e.currentTarget.style.background =
+                            'linear-gradient(to right, #4a2db8, #a78bfa)';
+                        }
                       }}
                     >
-                      List Item
+                      {isSubmitting ? 'Listing...' : 'List Item'}
                     </Button>
                   </div>
                 </CardContent>

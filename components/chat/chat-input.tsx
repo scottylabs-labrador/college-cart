@@ -10,6 +10,7 @@ type ChatInputProps = {
   conversationId: string;
   userId: string;
   loading?: boolean;
+  hideConfirmation?: boolean;
   onSend: (text: string) => Promise<void>;
   onSendConfirmation: (date: string, location: string, price: string) => Promise<void>;
 };
@@ -18,6 +19,7 @@ export default function ChatInput({
   conversationId,
   userId,
   loading = false,
+  hideConfirmation = false,
   onSend,
   onSendConfirmation,
 }: ChatInputProps) {
@@ -75,24 +77,28 @@ export default function ChatInput({
             <Send className="h-4 w-4" />
           </Button>
         </form>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => setShowConfirmationDialog(true)}
-          className="w-full text-xs"
-          disabled={loading || isSending}
-        >
-          <CheckCircle className="h-3 w-3 mr-2" />
-          Send Confirmation
-        </Button>
+        {!hideConfirmation && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setShowConfirmationDialog(true)}
+            className="w-full text-xs"
+            disabled={loading || isSending}
+          >
+            <CheckCircle className="h-3 w-3 mr-2" />
+            Send Confirmation
+          </Button>
+        )}
       </div>
 
-      <ConfirmationDialog
-        isOpen={showConfirmationDialog}
-        onClose={() => setShowConfirmationDialog(false)}
-        onSend={handleConfirmation}
-      />
+      {!hideConfirmation && (
+        <ConfirmationDialog
+          isOpen={showConfirmationDialog}
+          onClose={() => setShowConfirmationDialog(false)}
+          onSend={handleConfirmation}
+        />
+      )}
     </>
   );
 }

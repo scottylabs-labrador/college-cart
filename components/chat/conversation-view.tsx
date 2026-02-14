@@ -285,6 +285,8 @@ export default function ConversationView({
 
   // Check if this chat has been deactivated (item sold to someone else)
   const isChatInactive = messages.some(m => m.system_event === 'item_sold');
+  // Hide the confirmation button once a sale has been confirmed
+  const isConfirmed = messages.some(m => m.system_event === 'confirmation_accepted');
 
   // Empty state when no conversation selected
   if (!conversationId) {
@@ -345,6 +347,7 @@ export default function ConversationView({
             conversationId={conversationId}
             userId={userId}
             loading={loading}
+            hideConfirmation={isConfirmed}
             onSend={handleSendMessage}
             onSendConfirmation={handleSendConfirmation}
           />
