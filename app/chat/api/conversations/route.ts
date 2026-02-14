@@ -42,14 +42,9 @@ export async function GET() {
 
     // For each conversation, fetch the last message
     const conversationsWithMessages = await Promise.all(
-      (conversations || []).map(async (conv: {
-        conversation_id: string;
-        listing_id: number;
-        buyer_id: string;
-        seller_id: string;
-        created_at: string;
-        listing: { title: string; price_cents: number } | null;
-      }) => {
+      (conversations || []).map(async (conv: any) => {
+        // Supabase may return the joined listing as an array or a single object
+        const listing = Array.isArray(conv.listing) ? conv.listing[0] : conv.listing;
         const { data: lastMessage } = await supabase
           .from('message')
           .select('text, created_at')
@@ -85,8 +80,8 @@ export async function GET() {
         return {
           conversation_id: conv.conversation_id,
           listing_id: conv.listing_id,
-          listing_title: conv.listing?.title || 'Untitled Listing',
-          listing_price_cents: conv.listing?.price_cents || 0,
+          listing_title: listing?.title || 'Untitled Listing',
+          listing_price_cents: listing?.price_cents || 0,
           buyer_id: conv.buyer_id,
           seller_id: conv.seller_id,
           user_role,

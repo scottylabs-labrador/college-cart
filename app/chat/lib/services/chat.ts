@@ -29,6 +29,9 @@ export async function getConversations(userId: string) {
   // (This is the same logic you had in your API route)
   const conversationsWithMessages = await Promise.all(
     (conversations || []).map(async (conv: any) => {
+      // Supabase may return the joined listing as an array or a single object
+      const listing = Array.isArray(conv.listing) ? conv.listing[0] : conv.listing;
+
       const { data: lastMessage } = await supabase
         .from('message')
         .select('text, created_at')
@@ -61,8 +64,8 @@ export async function getConversations(userId: string) {
       return {
         conversation_id: conv.conversation_id,
         listing_id: conv.listing_id,
-        listing_title: conv.listing?.title || 'Untitled Listing',
-        listing_price_cents: conv.listing?.price_cents || 0,
+        listing_title: listing?.title || 'Untitled Listing',
+        listing_price_cents: listing?.price_cents || 0,
         buyer_id: conv.buyer_id,
         seller_id: conv.seller_id,
         user_role,
