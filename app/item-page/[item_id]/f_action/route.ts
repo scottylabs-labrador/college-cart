@@ -7,14 +7,13 @@ export async function POST(request: Request) {
     const formData = await request.formData();
     const listing_id = formData.get('listing_id') as string
     const user_id = formData.get('user_id') as string
-    let added = false;
 
     // Check if favorite already exists
     const { data: existingFavorites, error: checkError } = await supabase
       .from('favorite')
       .select('id')
       .eq('user_id', user_id)
-      .eq('listing_id', listing_id);
+      .eq('listing_id', listing_id) as unknown as { data: { id: string }[] | null; error: { message: string; code?: string } | null };
 
     if (checkError) {
       console.error('Error checking favorite:', checkError)
@@ -42,7 +41,7 @@ export async function POST(request: Request) {
       const { data: newFavorite, error: insertError } = await supabase
           .from('favorite')
           .insert({ user_id: user_id, listing_id: listing_id })
-          .select('id');
+          .select('id') as unknown as { data: { id: string }[] | null; error: { message: string; code?: string } | null };
 
       if (insertError) {
         console.error('Error inserting favorite:', insertError)
@@ -64,8 +63,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, error: 'Failed to create favorite - no data returned' }, { status: 500 })
       }
 
-      // Get the first row if multiple are returned (shouldn't happen, but handle it)
-      const favoriteId = Array.isArray(newFavorite) ? newFavorite[0]?.id : newFavorite?.id;
+      const favoriteId = newFavorite[0]?.id;
 
       return NextResponse.json({ success: true, favorite_id: favoriteId ?? null, liked: true });
     }

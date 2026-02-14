@@ -3,22 +3,11 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, ChevronRight, MessageCircle, ShoppingCart, Trash2 } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js'
-import {
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  SignUpButton,
-} from '@clerk/nextjs';
-
-import Link from 'next/link';
-import Image from 'next/image';
-import SearchBar from '@/components/search-bar';
 
 import MainHeader from '@/components/main-header';
 

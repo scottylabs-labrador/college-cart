@@ -28,19 +28,27 @@ export async function getConversations(userId: string) {
   // Process conversations to get last messages
   // (This is the same logic you had in your API route)
   const conversationsWithMessages = await Promise.all(
-    (conversations || []).map(async (conv: any) => {
+    (conversations || []).map(async (conv) => {
+      const c = conv as {
+        conversation_id: string;
+        listing_id: number;
+        buyer_id: string;
+        seller_id: string;
+        created_at: string;
+        listing: { title: string; price_cents: number }[] | { title: string; price_cents: number } | null;
+      };
       // Supabase may return the joined listing as an array or a single object
-      const listing = Array.isArray(conv.listing) ? conv.listing[0] : conv.listing;
+      const listing = Array.isArray(c.listing) ? c.listing[0] : c.listing;
 
       const { data: lastMessage } = await supabase
         .from('message')
         .select('text, created_at')
-        .eq('conversation_id', conv.conversation_id)
+        .eq('conversation_id', c.conversation_id)
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
 
-      const user_role = (conv.buyer_id === userId ? 'buyer' : 'seller') as 'buyer' | 'seller';
+      const user_role = (c.buyer_id === userId ? 'buyer' : 'seller') as 'buyer' | 'seller';
       
       // JSON parsing logic for special message types
       let lastMessageText = lastMessage?.text || null;
@@ -62,16 +70,16 @@ export async function getConversations(userId: string) {
       }
 
       return {
-        conversation_id: conv.conversation_id,
-        listing_id: conv.listing_id,
+        conversation_id: c.conversation_id,
+        listing_id: c.listing_id,
         listing_title: listing?.title || 'Untitled Listing',
         listing_price_cents: listing?.price_cents || 0,
-        buyer_id: conv.buyer_id,
-        seller_id: conv.seller_id,
+        buyer_id: c.buyer_id,
+        seller_id: c.seller_id,
         user_role,
         last_message: lastMessageText,
         last_message_time: lastMessage?.created_at || null,
-        created_at: conv.created_at,
+        created_at: c.created_at,
       };
     })
   );
