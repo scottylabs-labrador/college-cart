@@ -9,6 +9,22 @@ import { createClient } from '@supabase/supabase-js';
 const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '';
 const supabase = createClient('https://dkmaapjiqiqyxbjyshky.supabase.co', key);
 
+const LAST_READ_KEY = 'chat_last_read';
+
+function getLastReadTimestamps(): Record<string, string> {
+  try {
+    return JSON.parse(localStorage.getItem(LAST_READ_KEY) || '{}');
+  } catch {
+    return {};
+  }
+}
+
+function markConversationRead(conversationId: string) {
+  const timestamps = getLastReadTimestamps();
+  timestamps[conversationId] = new Date().toISOString();
+  localStorage.setItem(LAST_READ_KEY, JSON.stringify(timestamps));
+}
+
 type ChatPageClientProps = {
   initialConversations: Conversation[];
   userId: string;
@@ -22,10 +38,22 @@ export default function ChatPageClient({
 }: ChatPageClientProps) {
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(initialSelectedId);
+  const [lastReadTimestamps, setLastReadTimestamps] = useState<Record<string, string>>({});
 
   useEffect(() => {
     setConversations(initialConversations);
   }, [initialConversations]);
+
+  useEffect(() => {
+    setLastReadTimestamps(getLastReadTimestamps());
+  }, []);
+
+  useEffect(() => {
+    if (selectedConversationId) {
+      markConversationRead(selectedConversationId);
+      setLastReadTimestamps(getLastReadTimestamps());
+    }
+  }, [selectedConversationId]);
 
   // Handle browser back/forward buttons
   const handlePopState = useCallback(() => {
@@ -115,6 +143,8 @@ export default function ChatPageClient({
         selectedId={selectedConversationId}
         onSelect={handleSelectConversation}
         className={selectedConversationId ? 'hidden md:flex' : 'flex'}
+        userId={userId}
+        lastReadTimestamps={lastReadTimestamps}
       />
 
       {/* Chat view - hide on mobile when no conversation selected */}

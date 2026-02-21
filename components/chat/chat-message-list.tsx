@@ -4,11 +4,14 @@ import { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Message } from '@/types/chat';
 import { CheckCircle2, XCircle, ShoppingBag } from 'lucide-react';
+import Image from 'next/image';
+import gcalIcon from '@/app/assets/gcal.png';
 
 type ChatMessageListProps = {
   messages: Message[];
   userId: string;
   loading?: boolean;
+  listingTitle?: string;
   onConfirmationResponse?: (messageId: number, response: 'yes' | 'no') => void;
 };
 
@@ -16,6 +19,7 @@ export default function ChatMessageList({
   messages,
   userId,
   loading = false,
+  listingTitle = '',
   onConfirmationResponse
 }: ChatMessageListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -39,6 +43,35 @@ export default function ChatMessageList({
 
         // ── System event: confirmation accepted ──
         if (msg.system_event === 'confirmation_accepted') {
+          const calData = msg.confirmation_data;
+          let calendarUrl = '';
+          if (calData) {
+            const atIdx = calData.date.indexOf(' at ');
+            const datePart = atIdx !== -1 ? calData.date.substring(0, atIdx) : calData.date;
+            const timePart = atIdx !== -1 ? calData.date.substring(atIdx + 4) : null;
+            let startDate = new Date(datePart);
+            if (isNaN(startDate.getTime())) startDate = new Date();
+            if (timePart) {
+              const match = timePart.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+              if (match) {
+                let h = parseInt(match[1]);
+                const m = parseInt(match[2]);
+                const ap = match[3].toUpperCase();
+                if (ap === 'PM' && h !== 12) h += 12;
+                if (ap === 'AM' && h === 12) h = 0;
+                startDate.setHours(h, m, 0, 0);
+              }
+            }
+            const pad = (n: number) => n.toString().padStart(2, '0');
+            const toCalStr = (dt: Date) =>
+              `${dt.getFullYear()}${pad(dt.getMonth() + 1)}${pad(dt.getDate())}T${pad(dt.getHours())}${pad(dt.getMinutes())}00`;
+            const endDate = new Date(startDate.getTime() + 30 * 60 * 1000);
+            calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE`
+              + `&text=${encodeURIComponent(`CollegeCart ${listingTitle} Meeting`)}`
+              + `&dates=${toCalStr(startDate)}/${toCalStr(endDate)}`
+              + `&location=${encodeURIComponent(calData.location || '')}`
+              + `&ctz=America/New_York`;
+          }
           return (
             <div key={msg.message_id} className="flex justify-center my-4">
               <div className="w-full max-w-sm rounded-lg border border-green-200 bg-green-50 overflow-hidden">
@@ -46,22 +79,31 @@ export default function ChatMessageList({
                   <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
                   <span className="text-sm font-semibold text-green-800">Sale Confirmed</span>
                 </div>
-                {msg.confirmation_data && (
+                {calData && (
                   <div className="px-4 py-3 space-y-1 text-sm text-green-900">
                     <div className="flex">
                       <span className="font-medium min-w-[80px]">Date:</span>
-                      <span>{msg.confirmation_data.date}</span>
+                      <span>{calData.date}</span>
                     </div>
                     <div className="flex">
                       <span className="font-medium min-w-[80px]">Location:</span>
-                      <span>{msg.confirmation_data.location}</span>
+                      <span>{calData.location}</span>
                     </div>
-                    {msg.confirmation_data.price && (
+                    {calData.price && (
                       <div className="flex">
                         <span className="font-medium min-w-[80px]">Price:</span>
-                        <span>{msg.confirmation_data.price}</span>
+                        <span>{calData.price}</span>
                       </div>
                     )}
+                    <a
+                      href={calendarUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 mt-1 text-green-700 underline hover:text-green-900"
+                    >
+                      <Image src={gcalIcon} alt="Google Calendar" width={18} height={18} className="inline-block" />
+                      Add Event to Google Calendar
+                    </a>
                   </div>
                 )}
               </div>

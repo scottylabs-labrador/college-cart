@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Menu, ShoppingCart, Store, MessageCircle } from 'lucide-react';
@@ -11,13 +12,50 @@ import {
   SignUpButton,
   UserButton,
   useAuth,
+  useUser,
 } from '@clerk/nextjs';
 import SearchBar from '@/components/search-bar';
 import { useRouter } from 'next/navigation';
+import { Conversation } from '@/types/chat';
+
+const LAST_READ_KEY = 'chat_last_read';
+
+function getLastReadTimestamps(): Record<string, string> {
+  try {
+    return JSON.parse(localStorage.getItem(LAST_READ_KEY) || '{}');
+  } catch {
+    return {};
+  }
+}
 
 export default function MainHeader() {
   const { isSignedIn } = useAuth();
+  const { user } = useUser();
   const router = useRouter();
+  const [hasUnread, setHasUnread] = useState(false);
+
+  const checkUnread = useCallback(async () => {
+    if (!isSignedIn || !user) return;
+    try {
+      const res = await fetch('/chat/api/conversations');
+      const data = await res.json();
+      if (!data.success) return;
+      const timestamps = getLastReadTimestamps();
+      const unread = (data.conversations as Conversation[]).some((conv) => {
+        if (!conv.last_message_sender || conv.last_message_sender === user.id) return false;
+        if (!conv.last_message_time) return false;
+        const lastRead = timestamps[conv.conversation_id];
+        return !lastRead || new Date(conv.last_message_time) > new Date(lastRead);
+      });
+      setHasUnread(unread);
+    } catch { /* ignore */ }
+  }, [isSignedIn, user]);
+
+  useEffect(() => {
+    checkUnread();
+    const interval = setInterval(checkUnread, 30_000);
+    return () => clearInterval(interval);
+  }, [checkUnread]);
 
   const handleChatClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -66,10 +104,13 @@ export default function MainHeader() {
             </SignedOut>
             <button
               onClick={handleChatClick}
-              className="hidden md:flex"
+              className="hidden md:flex relative"
               title="Messages"
             >
               <MessageCircle className="h-6 w-6" />
+              {hasUnread && (
+                <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-[#2f167a]" />
+              )}
             </button>
             <SignedIn>
               <Link href="/cart" className="hidden md:flex" title="Cart">

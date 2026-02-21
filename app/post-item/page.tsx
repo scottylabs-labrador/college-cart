@@ -71,34 +71,42 @@ export default function PostItemPage() {
   const handleSubmit = async(e: React.FormEvent) =>{
     e.preventDefault();
     if (isSubmitting) return;
+    setIsSubmitting(true);
     
     // Frontend validation
     if (!title.trim()) {
       alert("Please enter a title for your item.");
+      setIsSubmitting(false);
       return;
     }
     if (!description.trim()) {
       alert("Please enter a description for your item.");
+      setIsSubmitting(false);
       return;
     }
     if (!price || parseFloat(price) <= 0) {
       alert("Please enter a valid price greater than 0.");
+      setIsSubmitting(false);
       return;
     }
     if (!quantity || parseInt(quantity) <= 0) {
       alert("Please enter a valid quantity greater than 0.");
+      setIsSubmitting(false);
       return;
     }
     if (!condition) {
       alert("Please select a condition for your item.");
+      setIsSubmitting(false);
       return;
     }
     if (imagePreviews.length <= 1) {
       alert("Please upload at least two images for your item.");
+      setIsSubmitting(false);
       return;
     }
     if (!userId) {
       alert("You must be logged in to post an item.");
+      setIsSubmitting(false);
       return;
     }
 
@@ -118,9 +126,7 @@ export default function PostItemPage() {
       formData.append("images", image.file);
     });
 
-    setIsSubmitting(true);
     try {
-      // Call the server action
       const response = await fetch("/post-item/action", {
         method: "POST",
         body: formData,
@@ -228,7 +234,7 @@ export default function PostItemPage() {
                     </div>
                   )}
                   <p className="text-xs text-muted-foreground absolute bottom-10 left-4">
-                    ( Picture Number Limit: 10 )
+                    ( {MAX_IMAGES - imagePreviews.length}/{MAX_IMAGES} pictures remaining )
                   </p>
                 </CardContent>
               </Card>
@@ -310,16 +316,19 @@ export default function PostItemPage() {
                     >
                       Price
                     </label>
-                    <Input
-                      id="price"
-                      type="number"
-                      step="0.01"
-                      value={price}
-                      onChange={(e) => setPrice(e.target.value)}
-                      placeholder="e.g., 19.99"
-                      min="0.01"
-                      className="w-full"
-                    />
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
+                      <Input
+                        id="price"
+                        type="number"
+                        step="0.01"
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value)}
+                        placeholder="e.g., 19.99"
+                        min="0.01"
+                        className="w-full pl-7"
+                      />
+                    </div>
                   </div>
 
                   {/* Condition Field */}
@@ -338,7 +347,7 @@ export default function PostItemPage() {
                         <SelectItem value="new">New</SelectItem>
                         <SelectItem value="like_new">Like New</SelectItem>
                         <SelectItem value="good">Good</SelectItem>
-                        <SelectItem value="fair">Fair</SelectItem>
+                        <SelectItem value="lightly_used">Lightly Used</SelectItem>
                         <SelectItem value="poor">Poor</SelectItem>
                       </SelectContent>
                     </Select>

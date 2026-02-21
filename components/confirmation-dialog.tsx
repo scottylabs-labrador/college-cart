@@ -14,6 +14,7 @@ type ConfirmationDialogProps = {
 
 export default function ConfirmationDialog({ isOpen, onClose, onSend }: ConfirmationDialogProps) {
   const [date, setDate] = useState('');
+  const [time, setTime] = useState('');
   const [location, setLocation] = useState('');
   const [price, setPrice] = useState('');
 
@@ -53,12 +54,26 @@ export default function ConfirmationDialog({ isOpen, onClose, onSend }: Confirma
     }
   };
 
+  const formatDateForDisplay = (dateStr: string, timeStr: string) => {
+    const d = new Date(dateStr + 'T00:00:00');
+    const formatted = d.toLocaleDateString('en-US', {
+      weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
+    });
+    if (!timeStr) return formatted;
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const h = hours % 12 || 12;
+    return `${formatted} at ${h}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const numericPrice = parseFloat(price);
-    if (date.trim() && location.trim() && !isNaN(numericPrice) && numericPrice > 0) {
-      onSend(date.trim(), location.trim(), `$${numericPrice.toFixed(2)}`);
+    if (date && location.trim() && !isNaN(numericPrice) && numericPrice > 0) {
+      const displayDate = formatDateForDisplay(date, time);
+      onSend(displayDate, location.trim(), `$${numericPrice.toFixed(2)}`);
       setDate('');
+      setTime('');
       setLocation('');
       setPrice('');
       onClose();
@@ -83,18 +98,31 @@ export default function ConfirmationDialog({ isOpen, onClose, onSend }: Confirma
         </CardHeader>
         <CardContent className="p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="date" className="text-sm font-medium">
-                Date:
-              </label>
-              <Input
-                id="date"
-                type="text"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                placeholder="e.g., Dec 10, 2024"
-                required
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <label htmlFor="date" className="text-sm font-medium">
+                  Date:
+                </label>
+                <Input
+                  id="date"
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="time" className="text-sm font-medium">
+                  Time:
+                </label>
+                <Input
+                  id="time"
+                  type="time"
+                  value={time}
+                  onChange={(e) => setTime(e.target.value)}
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <label htmlFor="location" className="text-sm font-medium">

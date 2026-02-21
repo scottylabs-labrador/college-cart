@@ -7,6 +7,7 @@ type ConversationListItemProps = {
   conversation: Conversation;
   isSelected: boolean;
   onClick: () => void;
+  hasUnread?: boolean;
 };
 
 function formatRelativeTime(timestamp: string | null): string {
@@ -27,6 +28,7 @@ export default function ConversationListItem({
   conversation,
   isSelected,
   onClick,
+  hasUnread = false,
 }: ConversationListItemProps) {
   const isSeller = conversation.user_role === 'seller';
 
@@ -45,9 +47,14 @@ export default function ConversationListItem({
       <div className="space-y-2">
         {/* Header with title and badge */}
         <div className="flex items-start justify-between gap-2">
-          <h3 className="font-semibold text-sm truncate flex-1">
-            {conversation.listing_title}
-          </h3>
+          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+            {hasUnread && (
+              <span className="h-2.5 w-2.5 rounded-full bg-red-500 flex-shrink-0" />
+            )}
+            <h3 className="font-semibold text-sm truncate">
+              {conversation.listing_title}
+            </h3>
+          </div>
           <Badge
             className={`
               text-xs flex-shrink-0

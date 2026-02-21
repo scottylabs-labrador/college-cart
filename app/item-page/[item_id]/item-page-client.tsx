@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, MessageCircle, ShoppingCart, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MessageCircle, ShoppingCart, Trash2, X, ZoomIn, ZoomOut } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js'
@@ -43,7 +43,102 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [uncollapseTrigger, setUncollapseTrigger] = useState(0);
-  const [openConfirmationTrigger, setOpenConfirmationTrigger] = useState(0);   
+  const [openConfirmationTrigger, setOpenConfirmationTrigger] = useState(0);
+
+  // Lightbox zoom state
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+
+  const ZOOM_MIN = 1;
+  const ZOOM_MAX = 4;
+  const ZOOM_STEP = 0.5;
+
+  const openLightbox = () => {
+    setZoomLevel(1);
+    setPanOffset({ x: 0, y: 0 });
+    setLightboxOpen(true);
+  };
+
+  const closeLightbox = () => {
+    setLightboxOpen(false);
+    setZoomLevel(1);
+    setPanOffset({ x: 0, y: 0 });
+  };
+
+  const zoomIn = () => {
+    setZoomLevel(prev => {
+      const next = Math.min(prev + ZOOM_STEP, ZOOM_MAX);
+      if (next === 1) setPanOffset({ x: 0, y: 0 });
+      return next;
+    });
+  };
+
+  const zoomOut = () => {
+    setZoomLevel(prev => {
+      const next = Math.max(prev - ZOOM_STEP, ZOOM_MIN);
+      if (next === 1) setPanOffset({ x: 0, y: 0 });
+      return next;
+    });
+  };
+
+  const handleLightboxWheel = useCallback((e: React.WheelEvent) => {
+    e.stopPropagation();
+    if (e.deltaY < 0) {
+      setZoomLevel(prev => {
+        const next = Math.min(prev + ZOOM_STEP, ZOOM_MAX);
+        if (next === 1) setPanOffset({ x: 0, y: 0 });
+        return next;
+      });
+    } else {
+      setZoomLevel(prev => {
+        const next = Math.max(prev - ZOOM_STEP, ZOOM_MIN);
+        if (next === 1) setPanOffset({ x: 0, y: 0 });
+        return next;
+      });
+    }
+  }, []);
+
+  const handlePanStart = (e: React.MouseEvent) => {
+    if (zoomLevel <= 1) return;
+    setIsPanning(true);
+    setPanStart({ x: e.clientX - panOffset.x, y: e.clientY - panOffset.y });
+  };
+
+  const handlePanMove = (e: React.MouseEvent) => {
+    if (!isPanning || zoomLevel <= 1) return;
+    setPanOffset({ x: e.clientX - panStart.x, y: e.clientY - panStart.y });
+  };
+
+  const handlePanEnd = () => {
+    setIsPanning(false);
+  };
+
+  const handlePreviousImage = useCallback(() => {
+    setSelectedImageIndex((prev) => 
+      prev > 0 ? prev - 1 : listing.imageUrls.length - 1
+    );
+  }, [listing.imageUrls.length]);
+
+  const handleNextImage = useCallback(() => {
+    setSelectedImageIndex((prev) => 
+      prev < listing.imageUrls.length - 1 ? prev + 1 : 0
+    );
+  }, [listing.imageUrls.length]);
+
+  // Close lightbox on Escape, navigate with arrow keys
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft') handlePreviousImage();
+      if (e.key === 'ArrowRight') handleNextImage();
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [lightboxOpen, handlePreviousImage, handleNextImage]);
 
   useEffect(() => {
     if (!userId || userId === listing.seller_id) {
@@ -246,18 +341,6 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
     }
   };
 
-  const handlePreviousImage = () => {
-    setSelectedImageIndex((prev) => 
-      prev > 0 ? prev - 1 : listing.imageUrls.length - 1
-    );
-  };
-
-  const handleNextImage = () => {
-    setSelectedImageIndex((prev) => 
-      prev < listing.imageUrls.length - 1 ? prev + 1 : 0
-    );
-  };
-
   const currentImage = listing.imageUrls[selectedImageIndex] || '/scotty-tote-dummy.jpg';
 
   return (
@@ -277,7 +360,8 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
                     <img
                       src={currentImage}
                       alt={listing.title}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover cursor-zoom-in"
+                      onClick={openLightbox}
                     />
                     {listing.imageUrls.length > 1 && (
                       <>
@@ -531,6 +615,116 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
           </Card>
         </div> */}
       </main>
+
+      {/* Image Lightbox */}
+      {lightboxOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
+          onClick={closeLightbox}
+          onWheel={handleLightboxWheel}
+        >
+          {/* Controls */}
+          <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-10 w-10 bg-black/50 hover:bg-black/70 text-white rounded-full"
+              onClick={(e) => { e.stopPropagation(); zoomOut(); }}
+              disabled={zoomLevel <= ZOOM_MIN}
+            >
+              <ZoomOut className="h-5 w-5" />
+            </Button>
+            <span className="text-white text-sm font-medium min-w-[3rem] text-center select-none">
+              {Math.round(zoomLevel * 100)}%
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-10 w-10 bg-black/50 hover:bg-black/70 text-white rounded-full"
+              onClick={(e) => { e.stopPropagation(); zoomIn(); }}
+              disabled={zoomLevel >= ZOOM_MAX}
+            >
+              <ZoomIn className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-10 w-10 bg-black/50 hover:bg-black/70 text-white rounded-full ml-2"
+              onClick={(e) => { e.stopPropagation(); closeLightbox(); }}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+
+          {/* Navigation arrows */}
+          {listing.imageUrls.length > 1 && (
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute left-4 top-1/2 -translate-y-1/2 h-12 w-12 bg-black/50 hover:bg-black/70 text-white rounded-full z-10"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePreviousImage();
+                  setZoomLevel(1);
+                  setPanOffset({ x: 0, y: 0 });
+                }}
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-4 top-1/2 -translate-y-1/2 h-12 w-12 bg-black/50 hover:bg-black/70 text-white rounded-full z-10"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleNextImage();
+                  setZoomLevel(1);
+                  setPanOffset({ x: 0, y: 0 });
+                }}
+              >
+                <ChevronRight className="h-6 w-6" />
+              </Button>
+            </>
+          )}
+
+          {/* Zoomed image */}
+          <div
+            className="max-w-[90vw] max-h-[85vh] overflow-hidden"
+            style={{
+              cursor: zoomLevel < ZOOM_MAX
+                ? (zoomLevel > 1 ? 'grab' : 'zoom-in')
+                : (zoomLevel > 1 ? 'grab' : 'default'),
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (zoomLevel < ZOOM_MAX) zoomIn();
+            }}
+            onMouseDown={(e) => { e.stopPropagation(); handlePanStart(e); }}
+            onMouseMove={handlePanMove}
+            onMouseUp={handlePanEnd}
+            onMouseLeave={handlePanEnd}
+          >
+            <img
+              src={currentImage}
+              alt={listing.title}
+              className="max-w-[90vw] max-h-[85vh] object-contain select-none transition-transform duration-200 ease-out"
+              style={{
+                transform: `scale(${zoomLevel}) translate(${panOffset.x / zoomLevel}px, ${panOffset.y / zoomLevel}px)`,
+                cursor: isPanning ? 'grabbing' : undefined,
+              }}
+              draggable={false}
+            />
+          </div>
+
+          {/* Image counter */}
+          {listing.imageUrls.length > 1 && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-sm font-medium bg-black/50 px-3 py-1 rounded-full">
+              {selectedImageIndex + 1} / {listing.imageUrls.length}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Chat Modal */}
       <ChatModal

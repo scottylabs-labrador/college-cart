@@ -6,6 +6,15 @@ import { Clock } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 import { Card } from "@/components/ui/card";
 import MainHeader from "@/components/main-header";
+import Image from "next/image";
+
+import furnitureImg from "@/app/assets/landing/furniture.png";
+import appliancesImg from "@/app/assets/landing/appliances.png";
+import schoolImg from "@/app/assets/landing/school.png";
+import electronicsImg from "@/app/assets/landing/electronics.png";
+import clothingImg from "@/app/assets/landing/clothing.png";
+import commuteImg from "@/app/assets/landing/commute.png";
+import freeandfunImg from "@/app/assets/landing/freeandfun.png";
 
 type ListingImage = {
   listing_image_id: number;
@@ -67,24 +76,21 @@ const HERO_TILES = [
     eyebrow: "Shelves, Cabinets, Storage",
     title: "Furniture",
     href: "/c?c=1&n=Furniture",
-    image:
-      "/furniture.png",
+    image: furnitureImg,
   },
   {
     id: "appliances",
     eyebrow: "Refrigerators, microwaves",
     title: "Appliances",
     href: "/c?c=2&n=Appliances",
-    image:
-      "/essentials.png",
+    image: appliancesImg,
   },
   {
     id: "studysupplies",
     eyebrow: "Laptops, headphones, monitors",
     title: "Textbooks & Study Supplies",
     href: "/c?c=3&n=Study%20Supplies",
-    image:
-      "/books.png",
+    image: schoolImg,
   },
 ];
 
@@ -93,29 +99,27 @@ const SMALL_TILES = [
     eyebrow: "Laptops, monitors",
     title: "Electronics",
     href: "/c?c=4&n=Electronics",
-    image:
-      "/electronics.png",
+    image: electronicsImg,
   },
   {
-    eyebrow: "Merch, jackets, formal wear",
+    eyebrow: "Merch, jackets, suits",
     title: "Clothing",
     href: "/c?c=5&n=Clothing",
-    image:
-      "/clothing.png",
+    image: clothingImg,
+    imageScale: "scale-125",
   },
   {
     eyebrow: "Bikes, scooters",
     title: "Commute",
     href: "/c?c=6&n=Commute",
-    image:
-      "/commute.png",
+    image: commuteImg,
   },
   {
     eyebrow: "Giveaways, art, tickets",
     title: "Free & Fun",
     href: "/c?c=7&n=Free%20%26%20Fun",
-    image:
-      "/tickets.png",
+    image: freeandfunImg,
+    imageScale: "scale-[1.35] translate-y-3",
   },
 ];
 
@@ -125,12 +129,14 @@ function TileCard({
   image,
   href,
   hero = false,
+  imageScale,
 }: {
   eyebrow: string;
   title: string;
-  image: string;
+  image: import("next/image").StaticImageData;
   href: string;
   hero?: boolean;
+  imageScale?: string;
 }) {
   const cardHeight = hero ? "h-[320px]" : "h-[240px]";
   const titleSize = hero
@@ -156,8 +162,8 @@ function TileCard({
         <h3 className={`${titleSize} text-slate-900 mt-1 line-clamp-2`}>
           {title}
         </h3>
-        <div className="mt-3 flex-1 rounded-md bg-white/40 overflow-hidden">
-          <img src={image} alt={title} className="h-full w-full object-cover" />
+        <div className="-mx-6 -mb-6 mt-3 flex-1 overflow-hidden relative">
+          <Image src={image} alt={title} fill className={`object-contain object-bottom ${imageScale ?? "scale-110"}`} placeholder="blur" />
         </div>
       </Card>
     </Link>

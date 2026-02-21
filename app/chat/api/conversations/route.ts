@@ -47,7 +47,7 @@ export async function GET() {
         const listing = Array.isArray(conv.listing) ? conv.listing[0] : conv.listing;
         const { data: lastMessage } = await supabase
           .from('message')
-          .select('text, created_at')
+          .select('text, created_at, user')
           .eq('conversation_id', conv.conversation_id)
           .order('created_at', { ascending: false })
           .limit(1)
@@ -87,13 +87,18 @@ export async function GET() {
           user_role,
           last_message: lastMessageText,
           last_message_time: lastMessage?.created_at || null,
+          last_message_sender: lastMessage?.user || null,
           created_at: conv.created_at,
         };
       })
     );
 
-    // Sort by last message time (most recent first)
-    conversationsWithMessages.sort((a, b) => {
+    // Only include conversations that have at least one message
+    const nonEmptyConversations = conversationsWithMessages.filter(
+      (conv) => conv.last_message !== null
+    );
+
+    nonEmptyConversations.sort((a, b) => {
       if (!a.last_message_time && !b.last_message_time) return 0;
       if (!a.last_message_time) return 1;
       if (!b.last_message_time) return -1;
@@ -102,7 +107,7 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      conversations: conversationsWithMessages,
+      conversations: nonEmptyConversations,
     });
   } catch (error) {
     console.error('Unexpected error in GET /chat/api/conversations:', error);

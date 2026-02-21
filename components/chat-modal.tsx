@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { X, Send, ChevronDown, ChevronUp, CheckCircle, CheckCircle2, XCircle, ShoppingBag } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
@@ -192,8 +191,8 @@ export default function ChatModal({ isOpen, onClose, conversationId, listingTitl
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!userId || !conversationId || !text.trim()) return;
 
     setLoading(true);
@@ -221,6 +220,13 @@ export default function ChatModal({ isOpen, onClose, conversationId, listingTitl
       alert("Failed to send message. Please try again.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
     }
   };
 
@@ -373,24 +379,68 @@ export default function ChatModal({ isOpen, onClose, conversationId, listingTitl
                           <CheckCircle2 className="h-3.5 w-3.5 text-green-600 flex-shrink-0" />
                           <span className="text-xs font-semibold text-green-800">Sale Confirmed</span>
                         </div>
-                        {msg.confirmation_data && (
-                          <div className="px-3 py-2 space-y-0.5 text-xs text-green-900">
-                            <div className="flex">
-                              <span className="font-medium min-w-[65px]">Date:</span>
-                              <span>{msg.confirmation_data.date}</span>
-                            </div>
-                            <div className="flex">
-                              <span className="font-medium min-w-[65px]">Location:</span>
-                              <span>{msg.confirmation_data.location}</span>
-                            </div>
-                            {msg.confirmation_data.price && (
+                        {msg.confirmation_data && (() => {
+                          const d = msg.confirmation_data;
+                          // Parse the date string (e.g. "Sat, Feb 14, 2026 at 2:30 PM" or just "Sat, Feb 14, 2026")
+                          const atIdx = d.date.indexOf(' at ');
+                          const datePart = atIdx !== -1 ? d.date.substring(0, atIdx) : d.date;
+                          const timePart = atIdx !== -1 ? d.date.substring(atIdx + 4) : null;
+
+                          let startDate = new Date(datePart);
+                          if (isNaN(startDate.getTime())) startDate = new Date();
+
+                          if (timePart) {
+                            const match = timePart.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+                            if (match) {
+                              let h = parseInt(match[1]);
+                              const m = parseInt(match[2]);
+                              const ap = match[3].toUpperCase();
+                              if (ap === 'PM' && h !== 12) h += 12;
+                              if (ap === 'AM' && h === 12) h = 0;
+                              startDate.setHours(h, m, 0, 0);
+                            }
+                          }
+
+                          const pad = (n: number) => n.toString().padStart(2, '0');
+                          const toCalStr = (dt: Date) =>
+                            `${dt.getFullYear()}${pad(dt.getMonth() + 1)}${pad(dt.getDate())}T${pad(dt.getHours())}${pad(dt.getMinutes())}00`;
+
+                          const endDate = new Date(startDate.getTime() + 30 * 60 * 1000);
+                          const dates = `${toCalStr(startDate)}/${toCalStr(endDate)}`;
+
+                          const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE`
+                            + `&text=${encodeURIComponent(`CollegeCart ${listingTitle} Meeting`)}`
+                            + `&dates=${dates}`
+                            + `&location=${encodeURIComponent(d.location || '')}`
+                            + `&ctz=America/New_York`;
+
+                          return (
+                            <div className="px-3 py-2 space-y-0.5 text-xs text-green-900">
                               <div className="flex">
-                                <span className="font-medium min-w-[65px]">Price:</span>
-                                <span>{msg.confirmation_data.price}</span>
+                                <span className="font-medium min-w-[65px]">Date:</span>
+                                <span>{d.date}</span>
                               </div>
-                            )}
-                          </div>
-                        )}
+                              <div className="flex">
+                                <span className="font-medium min-w-[65px]">Location:</span>
+                                <span>{d.location}</span>
+                              </div>
+                              {d.price && (
+                                <div className="flex">
+                                  <span className="font-medium min-w-[65px]">Price:</span>
+                                  <span>{d.price}</span>
+                                </div>
+                              )}
+                              <a
+                                href={calendarUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 mt-1 text-green-700 underline hover:text-green-900"
+                              >
+                                Add to Google Calendar
+                              </a>
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
                   );
@@ -497,7 +547,7 @@ export default function ChatModal({ isOpen, onClose, conversationId, listingTitl
                               className="flex-1 h-8 text-xs hover:bg-background"
                               disabled={loading}
                             >
-                              no
+                              No
                             </Button>
                             <Button
                               size="sm"
@@ -506,7 +556,7 @@ export default function ChatModal({ isOpen, onClose, conversationId, listingTitl
                               className="flex-1 h-8 text-xs hover:bg-background"
                               disabled={loading}
                             >
-                              yes
+                              Yes
                             </Button>
                           </div>
                         ) : (
@@ -555,18 +605,25 @@ export default function ChatModal({ isOpen, onClose, conversationId, listingTitl
           ) : (
             <div className="space-y-2">
               <form onSubmit={handleSubmit} className="relative">
-                <Input
+                <textarea
                   value={text}
                   onChange={(e) => setText(e.target.value)}
+                  onKeyDown={handleKeyDown}
                   placeholder="Type your message..."
-                  className="pr-12"
+                  rows={1}
                   disabled={loading}
+                  className="flex w-full rounded-md border border-input bg-background px-3 py-2 pr-12 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none overflow-hidden max-h-32"
+                  onInput={(e) => {
+                    const target = e.target as HTMLTextAreaElement;
+                    target.style.height = 'auto';
+                    target.style.height = `${Math.min(target.scrollHeight, 128)}px`;
+                  }}
                 />
                 <Button
                   type="submit"
                   disabled={loading || !text.trim()}
                   size="icon"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 border-0 text-white"
+                  className="absolute right-1 bottom-1.5 h-8 w-8 border-0 text-white"
                   style={{
                     background: 'linear-gradient(to right, #4a2db8, #a78bfa)',
                   }}

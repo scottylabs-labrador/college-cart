@@ -42,7 +42,7 @@ export async function getConversations(userId: string) {
 
       const { data: lastMessage } = await supabase
         .from('message')
-        .select('text, created_at')
+        .select('text, created_at, user')
         .eq('conversation_id', c.conversation_id)
         .order('created_at', { ascending: false })
         .limit(1)
@@ -79,18 +79,22 @@ export async function getConversations(userId: string) {
         user_role,
         last_message: lastMessageText,
         last_message_time: lastMessage?.created_at || null,
+        last_message_sender: lastMessage?.user || null,
         created_at: c.created_at,
       };
     })
   );
 
-  // Sort by last message time
-  conversationsWithMessages.sort((a, b) => {
+  const nonEmptyConversations = conversationsWithMessages.filter(
+    (conv) => conv.last_message !== null
+  );
+
+  nonEmptyConversations.sort((a, b) => {
     if (!a.last_message_time && !b.last_message_time) return 0;
     if (!a.last_message_time) return 1;
     if (!b.last_message_time) return -1;
     return new Date(b.last_message_time).getTime() - new Date(a.last_message_time).getTime();
   });
 
-  return conversationsWithMessages;
+  return nonEmptyConversations;
 }

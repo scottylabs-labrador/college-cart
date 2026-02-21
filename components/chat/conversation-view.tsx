@@ -332,6 +332,7 @@ export default function ConversationView({
           messages={messages}
           userId={userId}
           loading={loading}
+          listingTitle={currentConversation?.listing_title || ''}
           onConfirmationResponse={handleConfirmationResponse}
         />
       </div>

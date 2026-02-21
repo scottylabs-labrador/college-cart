@@ -25,5 +25,6 @@ export type Conversation = {
   user_role: 'buyer' | 'seller';
   last_message: string | null;
   last_message_time: string | null;
+  last_message_sender: string | null;
   created_at: string;
 };

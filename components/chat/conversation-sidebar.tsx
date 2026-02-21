@@ -11,6 +11,8 @@ type ConversationSidebarProps = {
   selectedId: string | null;
   onSelect: (id: string) => void;
   className?: string;
+  userId: string;
+  lastReadTimestamps: Record<string, string>;
 };
 
 export default function ConversationSidebar({
@@ -18,6 +20,8 @@ export default function ConversationSidebar({
   selectedId,
   onSelect,
   className = '',
+  userId,
+  lastReadTimestamps,
 }: ConversationSidebarProps) {
   return (
     <aside className={`w-full md:w-80 border-r bg-background flex flex-col ${className}`}>
@@ -40,14 +44,24 @@ export default function ConversationSidebar({
             </Button>
           </div>
         ) : (
-          conversations.map((conv) => (
-            <ConversationListItem
-              key={conv.conversation_id}
-              conversation={conv}
-              isSelected={conv.conversation_id === selectedId}
-              onClick={() => onSelect(conv.conversation_id)}
-            />
-          ))
+          conversations.map((conv) => {
+            const lastRead = lastReadTimestamps[conv.conversation_id];
+            const hasUnread =
+              conv.last_message_sender !== null &&
+              conv.last_message_sender !== userId &&
+              conv.last_message_time !== null &&
+              (!lastRead || new Date(conv.last_message_time) > new Date(lastRead));
+
+            return (
+              <ConversationListItem
+                key={conv.conversation_id}
+                conversation={conv}
+                isSelected={conv.conversation_id === selectedId}
+                onClick={() => onSelect(conv.conversation_id)}
+                hasUnread={hasUnread}
+              />
+            );
+          })
         )}
       </div>
     </aside>
