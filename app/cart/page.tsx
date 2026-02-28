@@ -66,11 +66,8 @@ export default function CollegeCartHome() {
   const [selectListings, setSelectedListings] = useState<ListingDisplay[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  if (!isLoaded || !userId) {
-    return <RequireLogin />;
-  }
-
   useEffect(() => {
+    if (!userId) return;
 
     const fetchFavorites = async() => {
         setIsLoading(true);
@@ -132,10 +129,12 @@ export default function CollegeCartHome() {
     };
 
     fetchFavorites();
-    
 
- }, [])
+  }, [userId]);
 
+  if (!isLoaded || !userId) {
+    return <RequireLogin />;
+  }
 
   return <FavoriteClient listings={selectListings} isLoading={isLoading} />;
 }
