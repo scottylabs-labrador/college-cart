@@ -42,7 +42,14 @@ export async function GET() {
 
     // For each conversation, fetch the last message
     const conversationsWithMessages = await Promise.all(
-      (conversations || []).map(async (conv: any) => {
+      (conversations || []).map(async (conv: {
+        conversation_id: string;
+        listing_id: number;
+        buyer_id: string;
+        seller_id: string;
+        created_at: string;
+        listing: { title: string; price_cents: number }[] | { title: string; price_cents: number } | null;
+      }) => {
         // Supabase may return the joined listing as an array or a single object
         const listing = Array.isArray(conv.listing) ? conv.listing[0] : conv.listing;
         const { data: lastMessage } = await supabase

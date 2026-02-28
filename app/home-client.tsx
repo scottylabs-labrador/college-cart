@@ -260,7 +260,7 @@ export default function HomeClient() {
 
         {/* See what's selling section */}
         <div>
-          <p className="text-xl font-medium pt-4 mb-6">See what's selling</p>
+          <p className="text-xl font-medium pt-4 mb-6">See what&apos;s selling</p>
           {isLoading ? (
             <div className="flex items-center gap-3 text-slate-700 py-8">
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-300 border-t-[#2f167a]" />

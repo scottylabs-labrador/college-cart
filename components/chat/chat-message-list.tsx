@@ -243,13 +243,13 @@ export default function ChatMessageList({
             className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[75%] rounded-lg px-3 py-1.5 ${
+              className={`max-w-[75%] min-w-0 rounded-lg px-3 py-1.5 overflow-hidden ${
                 isOwnMessage
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-muted text-foreground'
               }`}
             >
-              <p className="text-sm leading-relaxed">{msg.text}</p>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap [overflow-wrap:anywhere]">{msg.text}</p>
               <p className="text-xs opacity-70 mt-0.5">
                 {new Date(msg.created_at).toLocaleTimeString([], {
                   hour: '2-digit',

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { X, Send, ChevronDown, ChevronUp, CheckCircle, CheckCircle2, XCircle, ShoppingBag } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
-import { useAuth, useUser } from '@clerk/nextjs';
+import { useAuth } from '@clerk/nextjs';
 import ConfirmationDialog from './confirmation-dialog';
 
 const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "";
@@ -31,6 +31,14 @@ type Message = {
   system_event?: 'confirmation_accepted' | 'confirmation_declined' | 'item_sold';
 };
 
+type RawMessage = {
+  message_id: number;
+  text: string;
+  user: string;
+  created_at: string;
+  message_type?: string;
+};
+
 type ChatModalProps = {
   isOpen: boolean;
   onClose: () => void;
@@ -47,7 +55,6 @@ export default function ChatModal({ isOpen, onClose, conversationId, listingTitl
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
   const { userId } = useAuth();
-  const { user } = useUser();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Reset collapsed state when modal is opened, conversation changes, or uncollapseTrigger changes
@@ -78,7 +85,7 @@ export default function ChatModal({ isOpen, onClose, conversationId, listingTitl
         console.error("Error fetching messages:", error);
       } else if (data) {
         // Parse JSON-encoded messages into typed Message objects
-        const parsedMessages = data.map((msg: any) => {
+        const parsedMessages = data.map((msg: RawMessage) => {
           try {
             const parsed = JSON.parse(msg.text);
             if (parsed.type === 'confirmation') {
@@ -140,7 +147,7 @@ export default function ChatModal({ isOpen, onClose, conversationId, listingTitl
           filter: `conversation_id=eq.${conversationId}`,
         },
         (payload) => {
-          const newMsg = payload.new as any;
+          const newMsg = payload.new as RawMessage;
           // Parse message data by checking if text is JSON with a known type
           try {
             const parsed = JSON.parse(newMsg.text);
@@ -361,7 +368,7 @@ export default function ChatModal({ isOpen, onClose, conversationId, listingTitl
         </CardHeader>
         <CardContent className="flex-1 flex flex-col p-4 overflow-hidden">
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto space-y-2 mb-4 pr-2">
+          <div className="flex-1 overflow-y-auto space-y-2 mb-4 pr-2 min-w-0">
             {messages.length === 0 ? (
               <div className="text-center text-muted-foreground py-8">
                 No messages yet. Start the conversation!
@@ -576,13 +583,13 @@ export default function ChatModal({ isOpen, onClose, conversationId, listingTitl
                     className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
-                      className={`max-w-[75%] rounded-lg px-3 py-1.5 ${
+                      className={`max-w-[75%] min-w-0 rounded-lg px-3 py-1.5 overflow-hidden ${
                         isOwnMessage
                           ? 'bg-primary text-primary-foreground'
                           : 'bg-muted text-foreground'
                       }`}
                     >
-                      <p className="text-sm leading-relaxed">{msg.text}</p>
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap [overflow-wrap:anywhere]">{msg.text}</p>
                       <p className="text-xs opacity-70 mt-0.5">
                         {new Date(msg.created_at).toLocaleTimeString([], {
                           hour: '2-digit',
