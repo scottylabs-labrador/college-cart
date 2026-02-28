@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 import { useAuth } from "@clerk/nextjs";
 import { Card } from "@/components/ui/card";
+import Image from "next/image";
 import { Clock } from "lucide-react";
 import MainHeader from "@/components/main-header";
 import RequireLogin from "@/components/require_login";
@@ -82,10 +83,13 @@ function ListingGrid({ items, emptyMessage }: { items: ListingDisplay[]; emptyMe
         >
           <Card className="rounded-xl border-0 shadow-sm overflow-hidden bg-white">
             <div className="aspect-square relative bg-muted overflow-hidden">
-              <img
+              <Image
                 src={listing.imageUrl}
                 alt={listing.title}
-                className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
+                fill
+                unoptimized
+                sizes="(max-width: 768px) 50vw, 25vw"
+                className={`object-cover group-hover:scale-105 transition-transform duration-300 ${
                   listing.status === 'sold' ? 'opacity-60' : ''
                 }`}
               />

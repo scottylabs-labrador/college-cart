@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
+import Image from "next/image";
 import { Card } from "@/components/ui/card";
 import MainHeader from "@/components/main-header";
 import LoadingViewListings from "./loading";
@@ -195,10 +196,13 @@ export default function ViewListingsPage() {
               >
                 <Card className="overflow-hidden rounded-xl border-0 bg-white shadow-sm">
                   <div className="relative aspect-square overflow-hidden bg-muted">
-                    <img
+                    <Image
                       src={listing.imageUrl}
                       alt={listing.title}
-                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      fill
+                      unoptimized
+                      sizes="(max-width: 768px) 50vw, 25vw"
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                   </div>
                   <div className="p-4">

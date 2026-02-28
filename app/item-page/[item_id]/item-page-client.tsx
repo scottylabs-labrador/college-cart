@@ -11,6 +11,7 @@ import { createClient } from '@supabase/supabase-js'
 
 import MainHeader from '@/components/main-header';
 
+import Image from 'next/image';
 import ChatModal from '@/components/chat-modal';
 
 type ListingData = {
@@ -357,10 +358,13 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
               <div className="aspect-square bg-muted flex items-center justify-center relative">
                 {listing.imageUrls.length > 0 ? (
                   <>
-                    <img
+                    <Image
                       src={currentImage}
                       alt={listing.title}
-                      className="w-full h-full object-cover cursor-zoom-in"
+                      fill
+                      unoptimized
+                      sizes="(max-width: 1024px) 100vw, 50vw"
+                      className="object-cover cursor-zoom-in"
                       onClick={openLightbox}
                     />
                     {listing.imageUrls.length > 1 && (
@@ -417,10 +421,13 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
                         : 'border-transparent opacity-60 hover:opacity-100'
                     }`}
                   >
-                    <img
+                    <Image
                       src={url}
                       alt={`${listing.title} ${index + 1}`}
-                      className="w-full h-full object-cover"
+                      fill
+                      unoptimized
+                      sizes="12.5vw"
+                      className="object-cover"
                     />
                   </button>
                 ))}
