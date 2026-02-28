@@ -58,7 +58,7 @@ function formatPrice(priceCents: number | null, currency: string | null) {
 const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || ""; 
 
 const supabase = createClient(
-  'https://dkmaapjiqiqyxbjyshky.supabase.co',
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
  key
 )
 export const dynamic = 'force-dynamic';

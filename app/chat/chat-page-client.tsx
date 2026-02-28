@@ -7,7 +7,7 @@ import ConversationView from '@/components/chat/conversation-view';
 import { createClient } from '@supabase/supabase-js';
 
 const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '';
-const supabase = createClient('https://dkmaapjiqiqyxbjyshky.supabase.co', key);
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, key);
 
 const LAST_READ_KEY = 'chat_last_read';
 

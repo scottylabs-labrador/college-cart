@@ -30,7 +30,7 @@ type ListingData = {
 const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || ""; 
 
 const supabase = createClient(
-  'https://dkmaapjiqiqyxbjyshky.supabase.co',
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
  key
 )
 

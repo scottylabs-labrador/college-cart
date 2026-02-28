@@ -10,7 +10,7 @@ import ConfirmationDialog from './confirmation-dialog';
 
 const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "";
 const supabase = createClient(
-  'https://dkmaapjiqiqyxbjyshky.supabase.co',
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
   key
 );
 
@@ -436,7 +436,7 @@ export default function ChatModal({ isOpen, onClose, conversationId, listingTitl
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1 mt-1 text-green-700 underline hover:text-green-900"
                               >
-                                Add to Google Calendar
+                                Add Event to Google Calendar
                               </a>
                             </div>
                           );

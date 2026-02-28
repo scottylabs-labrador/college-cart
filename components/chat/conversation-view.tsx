@@ -9,7 +9,7 @@ import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '';
-const supabase = createClient('https://dkmaapjiqiqyxbjyshky.supabase.co', key);
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, key);
 
 type ConversationViewProps = {
   conversationId: string | null;
