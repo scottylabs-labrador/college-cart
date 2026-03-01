@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search as SearchIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import posthog from "posthog-js";
 
 type SearchBarProps = {
   placeholder?: string;
@@ -43,6 +44,12 @@ export function SearchBar({
 
     if (trimmed.length > 0) {
       params.set("search", trimmed);
+
+      // Track search performed event
+      posthog.capture('search_performed', {
+        search_query: trimmed,
+        query_length: trimmed.length,
+      });
     }
 
     const href =
