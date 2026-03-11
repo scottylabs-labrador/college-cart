@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { X, Send, ChevronDown, ChevronUp, CheckCircle, CheckCircle2, XCircle, ShoppingBag } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/lib/auth-client';
 import ConfirmationDialog from './confirmation-dialog';
 
 const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "";

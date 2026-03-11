@@ -8,7 +8,7 @@ CollegeCart provides a dedicated platform for Carnegie Mellon University student
 
 ## Features
 
-- **Secure Authentication** - Authentication powered by Clerk allowing only CMU students to access the platform via Andrew ID
+- **Secure Authentication** - Authentication powered by Better Auth + Keycloak for CMU SSO
 - **Modern UI** - Clean, responsive interface built with Next.js and styled with Tailwind CSS
 - **Full-Stack TypeScript** - End-to-end type safety across the entire application
 - **Real-time Chat** - Leverages Supabase real-time broadcast for real-time chat between buyers and sellers
@@ -17,9 +17,9 @@ CollegeCart provides a dedicated platform for Carnegie Mellon University student
 ## Tech Stack
 
 - **Framework**: [Next.js](https://nextjs.org) (App Router)
-- **Backend**: [Supabase](https://supabase.com) (PostgreSQL, Auth, Real-time)
+- **Backend**: [Supabase](https://supabase.com) (PostgreSQL, Real-time)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com)
-- **Authentication**: [Clerk](https://clerk.com/)
+- **Authentication**: [Better Auth](https://better-auth.com/) + Keycloak
 - **Language**: TypeScript
 
 ## Getting Started
@@ -48,10 +48,17 @@ pnpm install
 
 3. Set up environment variables:
    - Rename `.env.example` to `.env.local`
-   - Add your Supabase credentials:
+   - Add your Supabase and Keycloak credentials:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=[YOUR_SUPABASE_PROJECT_URL]
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=[YOUR_SUPABASE_PUBLISHABLE_KEY]
+BETTER_AUTH_SECRET=[YOUR_BETTER_AUTH_SECRET]
+BETTER_AUTH_URL=http://localhost:3000
+NEXT_PUBLIC_BETTER_AUTH_URL=http://localhost:3000
+DATABASE_URL=[YOUR_POSTGRES_CONNECTION_STRING]
+AUTH_ISSUER=[YOUR_KEYCLOAK_ISSUER_URL]
+AUTH_CLIENT_ID=[YOUR_KEYCLOAK_CLIENT_ID]
+AUTH_CLIENT_SECRET=[YOUR_KEYCLOAK_CLIENT_SECRET]
 ```
 
 You can find these values in your [Supabase project's API settings](https://supabase.com/dashboard/project/_?showConnect=true).

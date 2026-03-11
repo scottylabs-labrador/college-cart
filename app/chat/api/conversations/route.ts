@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { auth } from '@clerk/nextjs/server';
+import { getRequestUserId } from '@/lib/auth-server';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const { userId } = await auth();
+    const userId = await getRequestUserId(request);
 
     if (!userId) {
       return NextResponse.json(

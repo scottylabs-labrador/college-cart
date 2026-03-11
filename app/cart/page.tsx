@@ -2,7 +2,7 @@
 
 import React from "react";
 import { createClient } from '@supabase/supabase-js'
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/lib/auth-client';
 import { useEffect } from 'react'
 import { useState } from 'react';
 import FavoriteClient from "./favorite-client";

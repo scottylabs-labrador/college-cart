@@ -3,17 +3,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Menu, ShoppingCart, Store, MessageCircle } from 'lucide-react';
+import { Menu, ShoppingCart, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  SignUpButton,
-  UserButton,
-  useAuth,
-  useUser,
-} from '@clerk/nextjs';
+import { signInWithKeycloak, signOutFromAuth, useAuth, useUser } from '@/lib/auth-client';
 import SearchBar from '@/components/search-bar';
 import { useRouter } from 'next/navigation';
 import { Conversation } from '@/types/chat';
@@ -29,27 +21,28 @@ function getLastReadTimestamps(): Record<string, string> {
 }
 
 export default function MainHeader() {
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, userId } = useAuth();
   const { user } = useUser();
   const router = useRouter();
   const [hasUnread, setHasUnread] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const checkUnread = useCallback(async () => {
-    if (!isSignedIn || !user) return;
+    if (!isSignedIn || !userId) return;
     try {
       const res = await fetch('/chat/api/conversations');
       const data = await res.json();
       if (!data.success) return;
       const timestamps = getLastReadTimestamps();
       const unread = (data.conversations as Conversation[]).some((conv) => {
-        if (!conv.last_message_sender || conv.last_message_sender === user.id) return false;
+        if (!conv.last_message_sender || conv.last_message_sender === userId) return false;
         if (!conv.last_message_time) return false;
         const lastRead = timestamps[conv.conversation_id];
         return !lastRead || new Date(conv.last_message_time) > new Date(lastRead);
       });
       setHasUnread(unread);
     } catch { /* ignore */ }
-  }, [isSignedIn, user]);
+  }, [isSignedIn, userId]);
 
   useEffect(() => {
     checkUnread();
@@ -65,6 +58,32 @@ export default function MainHeader() {
     }
     router.push('/chat');
   };
+
+  const handleSignIn = async (requestSignUp = false) => {
+    try {
+      await signInWithKeycloak({
+        callbackURL: window.location.href,
+        requestSignUp,
+      });
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to sign in.');
+    }
+  };
+
+  const handleSignOut = async () => {
+    setIsSigningOut(true);
+    try {
+      await signOutFromAuth();
+      router.push('/');
+      router.refresh();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to sign out.');
+    } finally {
+      setIsSigningOut(false);
+    }
+  };
+
+  const userLabel = user?.name || user?.email?.split('@')[0] || 'Account';
 
   return (
     <header className="bg-[#2f167a] text-white">
@@ -94,14 +113,22 @@ export default function MainHeader() {
           </div>
 
           <div className="flex items-center gap-4">
-            <SignedOut>
-              <SignInButton />
-              <SignUpButton>
-                <button className="bg-[#6c47ff] text-white rounded-full font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 cursor-pointer">
+            {!isSignedIn && (
+              <>
+                <button
+                  onClick={() => void handleSignIn(false)}
+                  className="rounded-full border border-white/40 px-3 py-2 text-sm font-medium hover:bg-white/10"
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => void handleSignIn(true)}
+                  className="bg-[#6c47ff] text-white rounded-full font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 cursor-pointer"
+                >
                   Sign Up
                 </button>
-              </SignUpButton>
-            </SignedOut>
+              </>
+            )}
             <button
               onClick={handleChatClick}
               className="hidden md:flex relative"
@@ -112,20 +139,23 @@ export default function MainHeader() {
                 <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-[#2f167a]" />
               )}
             </button>
-            <SignedIn>
+            {isSignedIn && (
+              <>
               <Link href="/cart" className="hidden md:flex" title="Cart">
                 <ShoppingCart className="h-6 w-6" />
               </Link>
-              <UserButton>
-                <UserButton.MenuItems>
-                  <UserButton.Link
-                    label="Items for Sale"
-                    labelIcon={<Store />}
-                    href="/selling"
-                  />
-                </UserButton.MenuItems>
-              </UserButton>
-            </SignedIn>
+                <Link href="/selling" className="hidden md:flex text-sm font-medium" title="Items for Sale">
+                  {userLabel}
+                </Link>
+                <button
+                  onClick={() => void handleSignOut()}
+                  disabled={isSigningOut}
+                  className="rounded-full border border-white/40 px-3 py-2 text-sm font-medium disabled:opacity-60"
+                >
+                  {isSigningOut ? 'Signing Out...' : 'Sign Out'}
+                </button>
+              </>
+            )}
             <Link href="/post-item">
               <Button className="bg-white text-[#2f167a] rounded-xl px-6">
                 Sell
