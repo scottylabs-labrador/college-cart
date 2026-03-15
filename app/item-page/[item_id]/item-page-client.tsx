@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, ChevronRight, MessageCircle, ShoppingCart, Trash2, X, ZoomIn, ZoomOut } from 'lucide-react';
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js'
 
@@ -615,80 +615,6 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
             </Card>
           </div>
         </div>
-
-        {/* Comments Section */}
-        {/* <div className="mt-12">
-          <Card>
-            <CardHeader>
-              <CardTitle>Comments</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <SignedOut>
-                <div className="p-8 text-center border border-dashed rounded-lg bg-muted/50">
-                  <p className="text-muted-foreground">
-                    You need to sign in to comment on this item.
-                  </p>
-                  <div className="flex gap-3 justify-center mt-4">
-                    <SignInButton mode="modal">
-                      <Button variant="outline">Sign In</Button>
-                    </SignInButton>
-                    <SignUpButton mode="modal">
-                      <Button 
-                        className="border-0 text-white"
-                        style={{
-                          background: 'linear-gradient(to right, #4a2db8, #a78bfa)',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = 'linear-gradient(to right, #3d2599, #9d7ff0)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = 'linear-gradient(to right, #4a2db8, #a78bfa)';
-                        }}
-                      >
-                        Sign Up
-                      </Button>
-                    </SignUpButton>
-                  </div>
-                </div>
-              </SignedOut>
-              <SignedIn>
-                <div className="space-y-4">
-                  <div className="flex gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <span className="text-sm font-medium">U</span>
-                    </div>
-                    <div className="flex-1">
-                      <Input
-                        placeholder="Write a comment..."
-                        className="w-full"
-                      />
-                      <div className="flex justify-end mt-2">
-                        <Button 
-                          size="sm" 
-                          className="border-0 text-white"
-                          style={{
-                            background: 'linear-gradient(to right, #4a2db8, #a78bfa)',
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = 'linear-gradient(to right, #3d2599, #9d7ff0)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'linear-gradient(to right, #4a2db8, #a78bfa)';
-                          }}
-                        >
-                          Post Comment
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-sm text-muted-foreground text-center py-4">
-                    No comments yet. Be the first to comment!
-                  </div>
-                </div>
-              </SignedIn>
-            </CardContent>
-          </Card>
-        </div> */}
       </main>
 
       {/* Image Lightbox */}

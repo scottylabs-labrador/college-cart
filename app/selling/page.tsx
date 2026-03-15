@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth } from "@/lib/auth-client";
 import { Card } from "@/components/ui/card";
 import Image from "next/image";
 import { Clock } from "lucide-react";
