@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -17,6 +18,7 @@ import RequireLogin from '@/components/require_login';
 import { useRouter } from 'next/navigation';
 import MainHeader from '@/components/main-header';
 import Image from 'next/image';
+import posthog from 'posthog-js';
 
 const MAX_IMAGES = 10;
 
@@ -31,6 +33,17 @@ export default function PostItemPage() {
   const [description, setDescription] = useState('');
   const [imagePreviews, setImagePreviews] = useState<Array<{ url: string; file: File }>>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const hasTrackedStart = useRef(false);
+
+  // Track post item started event (signals intent to sell - top of seller funnel)
+  useEffect(() => {
+    if (isLoaded && userId && !hasTrackedStart.current) {
+      hasTrackedStart.current = true;
+      posthog.capture('post_item_started', {
+        user_id: userId,
+      });
+    }
+  }, [isLoaded, userId]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -54,7 +67,15 @@ export default function PostItemPage() {
           newImages.push({ url: reader.result as string, file });
           loadedCount++;
           if (loadedCount === filesToProcess.length) {
-            setImagePreviews((prev) => [...prev, ...newImages]);
+            setImagePreviews((prev) => {
+              const newTotal = prev.length + newImages.length;
+              // Track image upload event
+              posthog.capture('image_uploaded', {
+                images_added: newImages.length,
+                total_images: newTotal,
+              });
+              return [...prev, ...newImages];
+            });
           }
         };
         reader.readAsDataURL(file);
@@ -139,20 +160,57 @@ export default function PostItemPage() {
         const errorMessage = result.error || "Failed to add listing. Please try again.";
         alert(`Error: ${errorMessage}`);
         console.error("Server error:", result);
+
+        // Track listing creation failure
+        posthog.capture('listing_creation_failed', {
+          error_message: errorMessage,
+          category: category,
+          condition: condition,
+          price_cents: Math.round(parseFloat(price) * 100),
+          quantity: parseInt(quantity),
+          image_count: imagePreviews.length,
+        });
         return;
       }
 
       if (result.success && result.listing_id) {
+        // Track successful listing creation
+        posthog.capture('listing_created', {
+          listing_id: result.listing_id,
+          category: category,
+          condition: condition,
+          price_cents: Math.round(parseFloat(price) * 100),
+          quantity: parseInt(quantity),
+          image_count: imagePreviews.length,
+          title_length: title.length,
+          description_length: description.length,
+        });
+
         // Redirect to the item listing page
         router.push(`/item-page/${result.listing_id}`);
       } else {
         const errorMessage = result.error || "Listing added but failed to get item ID. Please try again.";
         alert(`Error: ${errorMessage}`);
         console.error("Unexpected response:", result);
+
+        // Track listing creation failure
+        posthog.capture('listing_creation_failed', {
+          error_message: errorMessage,
+          category: category,
+          condition: condition,
+        });
       }
     } catch (error) {
       console.error("Network error:", error);
       alert("Network error: Failed to connect to server. Please check your connection and try again.");
+
+      // Track network error with exception capture
+      posthog.captureException(error);
+      posthog.capture('listing_creation_failed', {
+        error_message: 'Network error',
+        category: category,
+        condition: condition,
+      });
     } finally {
       setIsSubmitting(false);
     }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getPostHogClient } from '@/lib/posthog-server'
 
 export async function POST(request: Request) {
   try {
@@ -31,6 +32,20 @@ export async function POST(request: Request) {
     }
 
     const conversationId = conversationData?.conversation_id
+
+    // Track conversation created event (server-side)
+    const posthog = getPostHogClient();
+    posthog.capture({
+      distinctId: user_id,
+      event: 'conversation_created',
+      properties: {
+        conversation_id: conversationId,
+        listing_id: listing_id,
+        buyer_id: user_id,
+        seller_id: seller_id,
+      }
+    });
+
     return NextResponse.json({ success: true, conversation_id: conversationId ?? null });
     
   } catch (error) {

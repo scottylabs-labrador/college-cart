@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getPostHogClient } from '@/lib/posthog-server';
 
 export async function POST(request: Request) {
   try {
@@ -118,6 +119,17 @@ export async function POST(request: Request) {
         { status: 500 }
       );
     }
+
+    // Track listing deleted event (server-side)
+    const posthog = getPostHogClient();
+    posthog.capture({
+      distinctId: user_id,
+      event: 'listing_deleted_server',
+      properties: {
+        listing_id: listing_id,
+        conversations_deleted: conversationIds.length,
+      }
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getPostHogClient } from '@/lib/posthog-server'
 
 export async function POST(request: Request) {
   try {
@@ -112,6 +113,20 @@ export async function POST(request: Request) {
           }
         }
 
+        // Track sale confirmed event (server-side)
+        const posthog = getPostHogClient();
+        posthog.capture({
+          distinctId: user,
+          event: 'sale_confirmed',
+          properties: {
+            listing_id: conversation.listing_id,
+            conversation_id: chat,
+            sale_price: originalConfirmation.price,
+            sale_date: originalConfirmation.date,
+            sale_location: originalConfirmation.location,
+          }
+        });
+
         return NextResponse.json({ success: true });
 
       } else {
@@ -132,6 +147,17 @@ export async function POST(request: Request) {
           console.error('Error inserting declined message:', declinedMsgError);
           return NextResponse.json({ success: false, error: 'Failed to send decline' }, { status: 500 });
         }
+
+        // Track sale declined event (server-side)
+        const posthog = getPostHogClient();
+        posthog.capture({
+          distinctId: user,
+          event: 'sale_declined',
+          properties: {
+            listing_id: conversation.listing_id,
+            conversation_id: chat,
+          }
+        });
 
         return NextResponse.json({ success: true });
       }
@@ -184,8 +210,35 @@ export async function POST(request: Request) {
     }
 
     const messageId = insertData?.message_id
+
+    // Track message or confirmation sent event (server-side)
+    const posthog = getPostHogClient();
+    if (messageType === 'confirmation' && confirmationData) {
+      posthog.capture({
+        distinctId: user,
+        event: 'confirmation_sent',
+        properties: {
+          conversation_id: chat,
+          message_id: messageId,
+          sale_price: confirmationData.price,
+          sale_date: confirmationData.date,
+          sale_location: confirmationData.location,
+        }
+      });
+    } else {
+      posthog.capture({
+        distinctId: user,
+        event: 'message_sent',
+        properties: {
+          conversation_id: chat,
+          message_id: messageId,
+          message_length: text?.length || 0,
+        }
+      });
+    }
+
     return NextResponse.json({ success: true, message_id: messageId ?? null });
-    
+
   } catch (error) {
     console.error('Unexpected error in POST /chat/action:', error)
     return NextResponse.json({ 

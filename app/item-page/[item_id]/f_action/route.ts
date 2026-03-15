@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getPostHogClient } from '@/lib/posthog-server'
 
 export async function POST(request: Request) {
   try {
@@ -35,6 +36,17 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, error: deleteError.message, details: deleteError }, { status: 500 })
       }
 
+      // Track favorite removed event (server-side)
+      const posthog = getPostHogClient();
+      posthog.capture({
+        distinctId: user_id,
+        event: 'favorite_toggled',
+        properties: {
+          listing_id: listing_id,
+          action: 'removed',
+        }
+      });
+
       return NextResponse.json({ success: true, favorite_id: null, liked: false });
     } else {
       // Favorite doesn't exist, so we're adding it (liking)
@@ -64,6 +76,18 @@ export async function POST(request: Request) {
       }
 
       const favoriteId = newFavorite[0]?.id;
+
+      // Track favorite added event (server-side)
+      const posthog = getPostHogClient();
+      posthog.capture({
+        distinctId: user_id,
+        event: 'favorite_toggled',
+        properties: {
+          listing_id: listing_id,
+          action: 'added',
+          favorite_id: favoriteId,
+        }
+      });
 
       return NextResponse.json({ success: true, favorite_id: favoriteId ?? null, liked: true });
     }

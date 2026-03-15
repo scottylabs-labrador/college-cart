@@ -8,6 +8,7 @@ import Image from "next/image";
 import { Card } from "@/components/ui/card";
 import MainHeader from "@/components/main-header";
 import LoadingViewListings from "./loading";
+import posthog from "posthog-js";
 
 type ListingImage = {
   listing_image_id: number;
@@ -162,6 +163,16 @@ export default function ViewListingsPage() {
 
   const shouldShowLoading = isLoading || loadedSearchTerm !== searchTerm;
 
+  const handleListingClick = (listing: ListingDisplay) => {
+    posthog.capture('search_result_clicked', {
+      listing_id: listing.id,
+      listing_title: listing.title,
+      source: searchTerm ? 'search_results' : 'browse_all',
+      search_query: searchTerm || undefined,
+      results_count: listings.length,
+    });
+  };
+
   if (shouldShowLoading) {
     return <LoadingViewListings />;
   }
@@ -193,6 +204,7 @@ export default function ViewListingsPage() {
                 key={listing.id}
                 href={listing.href}
                 className="group block transition-transform duration-200 hover:scale-[1.02]"
+                onClick={() => handleListingClick(listing)}
               >
                 <Card className="overflow-hidden rounded-xl border-0 bg-white shadow-sm">
                   <div className="relative aspect-square overflow-hidden bg-muted">

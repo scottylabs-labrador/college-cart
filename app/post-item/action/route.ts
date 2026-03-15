@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getPostHogClient } from '@/lib/posthog-server'
 
 export async function POST(request: Request) {
   try {
@@ -98,13 +99,30 @@ export async function POST(request: Request) {
 
       if (imageError) {
         console.error('Error inserting listing images:', imageError)
-        return NextResponse.json({ 
-          success: false, 
+        return NextResponse.json({
+          success: false,
           error: `Failed to upload images: ${imageError.message}`,
-          details: imageError 
+          details: imageError
         }, { status: 500 })
       }
     }
+
+    // Track listing created event (server-side)
+    const posthog = getPostHogClient();
+    posthog.capture({
+      distinctId: seller_id,
+      event: 'listing_created_server',
+      properties: {
+        listing_id: listingId,
+        category_id: category_id,
+        condition: condition,
+        price_cents: price_cents,
+        quantity: quantity,
+        image_count: imageFiles.length,
+        title_length: title.length,
+        description_length: description.length,
+      }
+    });
 
     return NextResponse.json({ success: true, listing_id: listingId })
   } catch (error) {

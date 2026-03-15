@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,7 @@ import MainHeader from '@/components/main-header';
 
 import Image from 'next/image';
 import ChatModal from '@/components/chat-modal';
+import posthog from 'posthog-js';
 
 type ListingData = {
   id: string;
@@ -45,6 +46,22 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [uncollapseTrigger, setUncollapseTrigger] = useState(0);
   const [openConfirmationTrigger, setOpenConfirmationTrigger] = useState(0);
+  const hasTrackedView = useRef(false);
+
+  // Track listing viewed event (top of conversion funnel)
+  useEffect(() => {
+    if (!hasTrackedView.current) {
+      hasTrackedView.current = true;
+      posthog.capture('listing_viewed', {
+        listing_id: listing.id,
+        listing_title: listing.title,
+        price: listing.price,
+        category: listing.category,
+        condition: listing.condition,
+        is_owner: isOwner,
+      });
+    }
+  }, [listing.id, listing.title, listing.price, listing.category, listing.condition, isOwner]);
 
   // Lightbox zoom state
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -196,12 +213,32 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
       }
 
       // Update the like state based on the server response
-      setIsLiked(result.liked ?? !isLiked);
+      const newLikedState = result.liked ?? !isLiked;
+      setIsLiked(newLikedState);
+
+      // Track cart add/remove event
+      if (newLikedState) {
+        posthog.capture('item_added_to_cart', {
+          listing_id: listing.id,
+          listing_title: listing.title,
+          price: listing.price,
+          category: listing.category,
+          condition: listing.condition,
+        });
+      } else {
+        posthog.capture('item_removed_from_cart', {
+          listing_id: listing.id,
+          listing_title: listing.title,
+          price: listing.price,
+          category: listing.category,
+        });
+      }
     } catch (error) {
       console.error("Network error:", error);
       alert("Network error: Failed to connect to server. Please check your connection and try again.");
       // Revert the optimistic update on error
       setIsLiked(!isLiked);
+      posthog.captureException(error);
     }
 
   };
@@ -236,12 +273,22 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
       if (result.success && result.conversation_id) {
         setConversationId(result.conversation_id.toString());
         setIsChatOpen(true);
+
+        // Track chat started event
+        posthog.capture('chat_started', {
+          listing_id: listing.id,
+          listing_title: listing.title,
+          price: listing.price,
+          category: listing.category,
+          conversation_id: result.conversation_id,
+        });
       } else {
         alert(result.error || "Failed to start conversation");
       }
     } catch (error) {
       console.error("Error creating conversation:", error);
       alert("Failed to start conversation. Please try again.");
+      posthog.captureException(error);
     }
   };
 
@@ -289,6 +336,16 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
           setUncollapseTrigger(prev => prev + 1); // Increment to trigger uncollapse
           setOpenConfirmationTrigger(prev => prev + 1); // Increment to trigger confirmation dialog
           console.log(result.conversation_id);
+
+          // Track offer initiated event
+          posthog.capture('offer_initiated', {
+            listing_id: listing.id,
+            listing_title: listing.title,
+            price: listing.price,
+            category: listing.category,
+            condition: listing.condition,
+            conversation_id: result.conversation_id,
+          });
         } else {
           const errorMessage = result.error || "Offer made but failed to get ID. Please try again.";
           alert(`Error: ${errorMessage}`);
@@ -297,6 +354,7 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
       } catch (error) {
         console.error("Network error:", error);
         alert("Network error: Failed to connect to server. Please check your connection and try again.");
+        posthog.captureException(error);
       }
   };
 
@@ -335,10 +393,20 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
         return;
       }
 
+      // Track listing deleted event
+      posthog.capture('listing_deleted', {
+        listing_id: listing.id,
+        listing_title: listing.title,
+        price: listing.price,
+        category: listing.category,
+        condition: listing.condition,
+      });
+
       router.push("/selling");
     } catch (error) {
       console.error("Network error:", error);
       alert("Network error: Failed to connect to server. Please check your connection and try again.");
+      posthog.captureException(error);
     }
   };
 
