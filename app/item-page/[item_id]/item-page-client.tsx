@@ -46,6 +46,7 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [uncollapseTrigger, setUncollapseTrigger] = useState(0);
   const [openConfirmationTrigger, setOpenConfirmationTrigger] = useState(0);
+  const [authError, setAuthError] = useState<string | null>(null);
   const hasTrackedView = useRef(false);
 
   // Track listing viewed event (top of conversion funnel)
@@ -184,7 +185,7 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
   const handleLike = async(e: React.FormEvent)  => {
     e.preventDefault();
     if(!isSignedIn || !userId){
-      alert("You must be logged in to like a listing!");
+      setAuthError("You must be logged in to like a listing!");
       return;
     }
     if (userId === listing.seller_id) {
@@ -245,7 +246,7 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
 
   const handleChat = async () => {
     if (!isSignedIn || !userId) {
-      alert("You must be logged in to chat with the seller!");
+      setAuthError("You must be logged in to chat with the seller!");
       return;
     }
 
@@ -295,11 +296,11 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
   const handleOffer = async(e: React.FormEvent)  => {
     e.preventDefault();
     if (!isSignedIn || !userId) {
-    alert("You must be logged in to make an offer!");
-    return;
-  }
+      setAuthError("You must be logged in to make an offer!");
+      return;
+    }
     if(!userId){
-      alert("You must be logged into make an offer!")
+      setAuthError("You must be logged in to make an offer!");
       return;
     }
 
@@ -736,6 +737,56 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
         uncollapseTrigger={uncollapseTrigger}
         openConfirmationTrigger={openConfirmationTrigger}
       />
+
+      {/* Auth Error Popup */}
+      {authError && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <Card className="w-full max-w-sm border-2 border-primary/20 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <CardHeader className="bg-primary/5 py-4 border-b flex flex-row items-center justify-between">
+              <CardTitle className="text-lg">Authentication Required</CardTitle>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setAuthError(null)}
+                className="h-8 w-8 rounded-full"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </CardHeader>
+            <CardContent className="p-6 text-center">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <MessageCircle className="h-8 w-8 text-primary" />
+              </div>
+              <p className="text-sm font-medium text-slate-700 mb-6">
+                {authError}
+              </p>
+              <div className="flex flex-col gap-2">
+                <Button 
+                  className="w-full bg-[#4a2db8] hover:bg-[#3d2599] text-white rounded-xl h-11"
+                  onClick={async () => {
+                    setAuthError(null);
+                    try {
+                      const { signInWithKeycloak } = await import('@/lib/auth-client');
+                      await signInWithKeycloak({ callbackURL: window.location.href });
+                    } catch (err) {
+                      console.error(err);
+                    }
+                  }}
+                >
+                  Sign In to Continue
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  className="w-full text-sm text-slate-500 hover:text-slate-800"
+                  onClick={() => setAuthError(null)}
+                >
+                  Maybe Later
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

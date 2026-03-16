@@ -27,6 +27,7 @@ export default function MainHeader() {
   const [hasUnread, setHasUnread] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   const checkUnread = useCallback(async () => {
     if (!isSignedIn || !userId) return;
@@ -54,7 +55,7 @@ export default function MainHeader() {
   const handleChatClick = (e: React.MouseEvent) => {
     e.preventDefault();
     if (!isSignedIn) {
-      alert('Please sign in to access your messages');
+      setAuthError('Please sign in to access your messages');
       return;
     }
     router.push('/chat');
@@ -210,6 +211,55 @@ export default function MainHeader() {
         iconClassName="h-5 w-5 opacity-80 text-slate-500"
       />
     </div>
+
+    {/* Auth Error Popup */}
+    {authError && (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="w-full max-w-sm bg-white rounded-2xl border-2 border-primary/20 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="bg-primary/5 py-4 px-6 border-b flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-slate-900">Authentication Required</h3>
+            <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setAuthError(null)}
+                className="h-8 w-8 rounded-full text-slate-500"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+          </div>
+          <div className="p-6 text-center">
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <MessageCircle className="h-8 w-8 text-primary" />
+            </div>
+            <p className="text-sm font-medium text-slate-700 mb-6">
+              {authError}
+            </p>
+            <div className="flex flex-col gap-2">
+              <Button 
+                className="w-full bg-[#4a2db8] hover:bg-[#3d2599] text-white rounded-xl h-11"
+                onClick={async () => {
+                  setAuthError(null);
+                  try {
+                    await signInWithKeycloak({ callbackURL: window.location.href });
+                  } catch (err) {
+                    console.error(err);
+                  }
+                }}
+              >
+                Sign In to Continue
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="w-full text-sm text-slate-500 hover:text-slate-800"
+                onClick={() => setAuthError(null)}
+              >
+                Maybe Later
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
     </>
   );
 }
