@@ -59,12 +59,9 @@ export default function MainHeader() {
     router.push('/chat');
   };
 
-  const handleSignIn = async (requestSignUp = false) => {
+  const handleSignIn = async () => {
     try {
-      await signInWithKeycloak({
-        callbackURL: window.location.href,
-        requestSignUp,
-      });
+      await signInWithKeycloak({ callbackURL: window.location.href });
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Failed to sign in.');
     }
@@ -114,20 +111,12 @@ export default function MainHeader() {
 
           <div className="flex items-center gap-4">
             {!isSignedIn && (
-              <>
-                <button
-                  onClick={() => void handleSignIn(false)}
-                  className="rounded-full border border-white/40 px-3 py-2 text-sm font-medium hover:bg-white/10"
-                >
-                  Sign In
-                </button>
-                <button
-                  onClick={() => void handleSignIn(true)}
-                  className="bg-[#6c47ff] text-white rounded-full font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 cursor-pointer"
-                >
-                  Sign Up
-                </button>
-              </>
+              <button
+                onClick={() => void handleSignIn()}
+                className="bg-[#6c47ff] text-white rounded-full font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 cursor-pointer"
+              >
+                Sign In
+              </button>
             )}
             <button
               onClick={handleChatClick}

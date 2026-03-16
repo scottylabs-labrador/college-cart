@@ -35,21 +35,14 @@ export function useUser() {
 
 export async function signInWithKeycloak(options?: {
   callbackURL?: string;
-  requestSignUp?: boolean;
 }) {
-  const { data, error } = await authClient.signIn.oauth2({
+  const { error } = await authClient.signIn.oauth2({
     providerId: "keycloak",
     callbackURL: options?.callbackURL,
-    requestSignUp: options?.requestSignUp,
-    disableRedirect: true,
   });
 
   if (error) {
     throw new Error(error.message || "Failed to start sign-in.");
-  }
-
-  if (data?.url) {
-    window.location.href = data.url;
   }
 }
 
