@@ -108,7 +108,7 @@ export default function ChatInput({
             disabled={loading || isSending}
           >
             <CheckCircle className="h-3 w-3 mr-2" />
-            Send Confirmation
+            Make Offer
           </Button>
         )}
       </div>

@@ -86,7 +86,7 @@ export default function ConfirmationDialog({ isOpen, onClose, onSend }: Confirma
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
       <Card className="w-full max-w-md m-4">
         <CardHeader className="flex flex-row items-center justify-between border-b">
-          <CardTitle>Send Confirmation</CardTitle>
+          <CardTitle>Make Offer</CardTitle>
           <Button
             variant="ghost"
             size="icon"

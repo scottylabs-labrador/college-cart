@@ -648,7 +648,7 @@ export default function ChatModal({ isOpen, onClose, conversationId, listingTitl
                   disabled={loading}
                 >
                   <CheckCircle className="h-3 w-3 mr-2" />
-                  Send Confirmation
+                  Make Offer
                 </Button>
               )}
             </div>
