@@ -31,7 +31,7 @@ export default async function EditItemPage({
     .order('sort_order', { ascending: true });
 
   const existingImages = images && !imagesError
-    ? images.map((img: any) => {
+    ? images.map((img: { listing_image_id: string; storage?: { base64?: string; type?: string } }) => {
         const storage = img.storage;
         if (storage && storage.base64) {
           return {

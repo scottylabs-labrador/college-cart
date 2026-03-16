@@ -726,6 +726,7 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
             onMouseUp={handlePanEnd}
             onMouseLeave={handlePanEnd}
           >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={currentImage}
               alt={listing.title}
