@@ -84,6 +84,7 @@ export default function MainHeader() {
   const userLabel = user?.name || user?.email?.split('@')[0] || 'Account';
 
   return (
+    <>
     <header className="bg-[#2f167a] text-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="flex items-center justify-between py-3 gap-3">
@@ -200,5 +201,15 @@ export default function MainHeader() {
         </nav>
       </div>
     </header>
+
+    <div className="md:hidden bg-[#2f167a] px-4 pb-3">
+      <SearchBar
+        placeholder="Search CollegeCart"
+        className="w-full"
+        inputClassName="pl-10 h-10 rounded-full bg-white text-slate-900"
+        iconClassName="h-5 w-5 opacity-80 text-slate-500"
+      />
+    </div>
+    </>
   );
 }
