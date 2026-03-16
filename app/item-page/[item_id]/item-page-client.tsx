@@ -774,7 +774,10 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
               </Button>
             </CardHeader>
             <CardContent className="p-6 text-center">
-              <p className="text-sm font-medium text-slate-700 mb-6 px-2">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <MessageCircle className="h-8 w-8 text-primary" />
+              </div>
+              <p className="text-sm font-medium text-slate-700 mb-6">
                 {authError}
               </p>
               <div className="flex flex-col gap-2">
