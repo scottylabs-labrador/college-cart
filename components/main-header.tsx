@@ -154,7 +154,15 @@ export default function MainHeader() {
                 </button>
               </>
             )}
-            <Link href="/post-item">
+            <Link 
+              href="/post-item"
+              onClick={(e) => {
+                if (!isSignedIn) {
+                  e.preventDefault();
+                  setAuthError('Please sign in to post an item for sale');
+                }
+              }}
+            >
               <Button className="bg-white text-[#2f167a] rounded-xl px-6">
                 Sell
               </Button>
@@ -228,10 +236,7 @@ export default function MainHeader() {
               </Button>
           </div>
           <div className="p-6 text-center">
-            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <MessageCircle className="h-8 w-8 text-primary" />
-            </div>
-            <p className="text-sm font-medium text-slate-700 mb-6">
+            <p className="text-sm font-medium text-slate-700 mb-6 px-2">
               {authError}
             </p>
             <div className="flex flex-col gap-2">
