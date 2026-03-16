@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, MessageCircle, Pencil, ShoppingCart, Trash2, X, ZoomIn, ZoomOut } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MessageCircle, ShoppingCart, Trash2, X, ZoomIn, ZoomOut } from 'lucide-react';
 import { useAuth } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js'
@@ -516,23 +516,6 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
               <div className="flex items-center gap-3 mb-6">
                 {isOwner ? (
                   <>
-                    <Button 
-                      size="lg" 
-                      className="flex-1 border-0 text-white"
-                      style={{
-                        background: 'linear-gradient(to right, #4a2db8, #a78bfa)',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'linear-gradient(to right, #3d2599, #9d7ff0)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'linear-gradient(to right, #4a2db8, #a78bfa)';
-                      }}
-                      onClick={() => router.push(`/edit-item/${listing.id}`)}
-                    >
-                      <Pencil className="w-5 h-5 mr-2" />
-                      Edit Listing
-                    </Button>
                     <Button 
                       size="lg" 
                       className="flex-1 border-0 text-white"
