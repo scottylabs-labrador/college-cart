@@ -30,7 +30,7 @@ type ListingProps = {
   condition: string;
   quantity: string;
   category: number;
-  existingImages: { id: number; url: string }[];
+  existingImages: { id: string; url: string }[];
 };
 
 export default function EditItemClient({ listing }: { listing: ListingProps }) {
@@ -45,7 +45,7 @@ export default function EditItemClient({ listing }: { listing: ListingProps }) {
   const [description, setDescription] = useState(listing.description);
   
   // Existing images to keep 
-  const [retainedImages, setRetainedImages] = useState<{ id: number; url: string }[]>(listing.existingImages);
+  const [retainedImages, setRetainedImages] = useState<{ id: string; url: string }[]>(listing.existingImages);
   // New images to upload
   const [newImagePreviews, setNewImagePreviews] = useState<Array<{ url: string; file: File }>>([]);
   

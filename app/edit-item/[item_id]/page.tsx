@@ -30,18 +30,18 @@ export default async function EditItemPage({
     .eq('listing_id', item_id)
     .order('sort_order', { ascending: true });
 
-  const existingImages = images && !imagesError
-    ? images.map((img: { listing_image_id: string; storage?: { base64?: string; type?: string } }) => {
-        const storage = img.storage;
-        if (storage && storage.base64) {
-          return {
-            id: img.listing_image_id,
-            url: `data:${storage.type || 'image/jpeg'};base64,${storage.base64}`,
-          };
-        }
-        return null;
-      }).filter(Boolean)
-    : [];
+  const existingImages: { id: string; url: string }[] = [];
+  if (images && !imagesError) {
+    for (const img of images as { listing_image_id: string; storage?: { base64?: string; type?: string } }[]) {
+      const storage = img.storage;
+      if (storage && storage.base64) {
+        existingImages.push({
+          id: img.listing_image_id,
+          url: `data:${storage.type || 'image/jpeg'};base64,${storage.base64}`,
+        });
+      }
+    }
+  }
 
   return (
     <EditItemClient
@@ -54,7 +54,7 @@ export default async function EditItemPage({
         condition: listing.condition || '',
         quantity: listing.quantity?.toString() || '1',
         category: listing.category_id,
-        existingImages: existingImages as { id: number, url: string }[],
+        existingImages,
       }}
     />
   );
