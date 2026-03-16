@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Menu, ShoppingCart, MessageCircle } from 'lucide-react';
+import { Menu, X, ShoppingCart, MessageCircle, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { signInWithKeycloak, signOutFromAuth, useAuth, useUser } from '@/lib/auth-client';
 import SearchBar from '@/components/search-bar';
@@ -26,6 +26,7 @@ export default function MainHeader() {
   const router = useRouter();
   const [hasUnread, setHasUnread] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const checkUnread = useCallback(async () => {
     if (!isSignedIn || !userId) return;
@@ -87,7 +88,13 @@ export default function MainHeader() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="flex items-center justify-between py-3 gap-3">
           <div className="flex items-center gap-3">
-            <Menu className="h-6 w-6 md:hidden" />
+            <button
+              onClick={() => setMobileMenuOpen((prev) => !prev)}
+              className="md:hidden"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
             <Link href="/" className="flex items-center gap-2">
               <Image
                 src="/logo-white.png"
@@ -152,6 +159,45 @@ export default function MainHeader() {
             </Link>
           </div>
         </div>
+      </div>
+
+      <div
+        className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+          mobileMenuOpen ? 'max-h-60' : 'max-h-0'
+        }`}
+      >
+        <nav className="flex flex-col border-t border-white/20 px-4 py-2 gap-1">
+          <button
+            onClick={(e) => { handleChatClick(e); setMobileMenuOpen(false); }}
+            className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-white/10 transition-colors"
+          >
+            <span className="relative">
+              <MessageCircle className="h-5 w-5" />
+              {hasUnread && (
+                <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-[#2f167a]" />
+              )}
+            </span>
+            Chat
+          </button>
+          <Link
+            href="/cart"
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-white/10 transition-colors"
+          >
+            <ShoppingCart className="h-5 w-5" />
+            Liked
+          </Link>
+          {isSignedIn && (
+            <Link
+              href="/selling"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-white/10 transition-colors"
+            >
+              <Settings className="h-5 w-5" />
+              Account Settings
+            </Link>
+          )}
+        </nav>
       </div>
     </header>
   );
