@@ -3,8 +3,24 @@
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Menu, X, ShoppingCart, MessageCircle, Settings } from 'lucide-react';
+import {
+  Menu,
+  X,
+  ShoppingCart,
+  MessageCircle,
+  ChevronDown,
+  Package,
+  UserRound,
+  LogOut,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { signInWithKeycloak, signOutFromAuth, useAuth, useUser } from '@/lib/auth-client';
 import SearchBar from '@/components/search-bar';
 import { useRouter } from 'next/navigation';
@@ -139,19 +155,53 @@ export default function MainHeader() {
             </button>
             {isSignedIn && (
               <>
-              <Link href="/cart" className="hidden md:flex" title="Cart">
-                <ShoppingCart className="h-6 w-6" />
-              </Link>
-                <Link href="/selling" className="hidden md:flex text-sm font-medium" title="Items for Sale">
-                  {userLabel}
+                <Link href="/cart" className="hidden md:flex" title="Cart">
+                  <ShoppingCart className="h-6 w-6" />
                 </Link>
-                <button
-                  onClick={() => void handleSignOut()}
-                  disabled={isSigningOut}
-                  className="rounded-full border border-white/40 px-3 py-2 text-sm font-medium disabled:opacity-60"
-                >
-                  {isSigningOut ? 'Signing Out...' : 'Sign Out'}
-                </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    className="hidden md:inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-medium text-white hover:bg-white/10 outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+                    aria-label="Account menu"
+                  >
+                    {userLabel}
+                    <ChevronDown className="h-4 w-4 opacity-90" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" sideOffset={8} className="min-w-[14rem]">
+                    <div className="px-2 py-2 border-b border-border">
+                      <p className="text-sm font-semibold text-foreground truncate">
+                        {user?.name || userLabel}
+                      </p>
+                      {user?.email && (
+                        <p className="text-xs text-muted-foreground truncate mt-0.5 max-w-[240px]">
+                          {user.email}
+                        </p>
+                      )}
+                    </div>
+                    <DropdownMenuItem
+                      disabled={isSigningOut}
+                      className="cursor-pointer"
+                      onSelect={() => {
+                        void handleSignOut();
+                      }}
+                    >
+                      <LogOut className="h-4 w-4" />
+                      {isSigningOut ? 'Signing out…' : 'Sign out'}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/selling" className="cursor-pointer">
+                        <Package className="h-4 w-4" />
+                        On Sale
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/account" className="cursor-pointer">
+                        <UserRound className="h-4 w-4" />
+                        Manage account
+                      </Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </>
             )}
             <Link href="/post-item">
@@ -165,10 +215,18 @@ export default function MainHeader() {
 
       <div
         className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
-          mobileMenuOpen ? 'max-h-60' : 'max-h-0'
+          mobileMenuOpen ? 'max-h-[28rem]' : 'max-h-0'
         }`}
       >
         <nav className="flex flex-col border-t border-white/20 px-4 py-2 gap-1">
+          {isSignedIn && (
+            <div className="px-3 py-2 mb-1 border-b border-white/15">
+              <p className="text-sm font-semibold truncate">{user?.name || userLabel}</p>
+              {user?.email && (
+                <p className="text-xs text-white/70 truncate mt-0.5">{user.email}</p>
+              )}
+            </div>
+          )}
           <button
             onClick={(e) => { handleChatClick(e); setMobileMenuOpen(false); }}
             className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-white/10 transition-colors"
@@ -190,14 +248,36 @@ export default function MainHeader() {
             Liked
           </Link>
           {isSignedIn && (
-            <Link
-              href="/selling"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-white/10 transition-colors"
-            >
-              <Settings className="h-5 w-5" />
-              Account Settings
-            </Link>
+            <>
+              <Link
+                href="/selling"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-white/10 transition-colors"
+              >
+                <Package className="h-5 w-5" />
+                On Sale
+              </Link>
+              <Link
+                href="/account"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-white/10 transition-colors"
+              >
+                <UserRound className="h-5 w-5" />
+                Manage account
+              </Link>
+              <button
+                type="button"
+                disabled={isSigningOut}
+                onClick={() => {
+                  void handleSignOut();
+                  setMobileMenuOpen(false);
+                }}
+                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-white/10 transition-colors text-left disabled:opacity-60"
+              >
+                <LogOut className="h-5 w-5" />
+                {isSigningOut ? 'Signing out…' : 'Sign out'}
+              </button>
+            </>
           )}
         </nav>
       </div>

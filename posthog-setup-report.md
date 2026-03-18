@@ -4,7 +4,7 @@ The wizard has completed a deep integration of PostHog into your CollegeCart Nex
 
 - **Client-side initialization** via `instrumentation-client.ts` for automatic pageviews, session replay, and error tracking
 - **Server-side tracking** via `posthog-node` for reliable server-side event capture
-- **User identification** integrated with Clerk authentication via `PostHogIdentify` component
+- **User identification** integrated with Better Auth via `PostHogIdentify` component
 - **Reverse proxy** configured in `next.config.ts` to bypass ad blockers and improve tracking reliability
 - **20+ custom events** tracking the complete marketplace user journey from listing creation to sale completion
 
@@ -48,7 +48,7 @@ The wizard has completed a deep integration of PostHog into your CollegeCart Nex
 |------|------|---------|
 | `instrumentation-client.ts` | Created | Client-side PostHog initialization |
 | `lib/posthog-server.ts` | Created | Server-side PostHog client |
-| `components/posthog-identify.tsx` | Created | User identification with Clerk auth |
+| `components/posthog-identify.tsx` | Created | User identification with Better Auth |
 | `next.config.ts` | Modified | Added reverse proxy rewrites |
 | `app/layout.tsx` | Modified | Added PostHogIdentify component |
 | `app/post-item/page.tsx` | Modified | Added post_item_started, image_uploaded, listing events |
