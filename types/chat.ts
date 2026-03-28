@@ -23,6 +23,7 @@ export type Conversation = {
   buyer_id: string;
   seller_id: string;
   user_role: 'buyer' | 'seller';
+  deal_status?: 'bought' | 'sold' | null;
   last_message: string | null;
   last_message_time: string | null;
   last_message_sender: string | null;

@@ -1,5 +1,35 @@
 import { createClient } from '@/lib/supabase/server';
 
+function getMessageType(text: string): string | null {
+  try {
+    const parsed = JSON.parse(text) as { type?: string };
+    return typeof parsed.type === 'string' ? parsed.type : null;
+  } catch {
+    return null;
+  }
+}
+
+function getPreviewText(text: string): string | null {
+  const messageType = getMessageType(text);
+
+  if (!messageType) return text;
+
+  if (
+    messageType === 'confirmation_accepted' ||
+    messageType === 'confirmation_declined' ||
+    messageType === 'item_sold' ||
+    messageType === 'confirmation_response'
+  ) {
+    return null;
+  }
+
+  if (messageType === 'confirmation') {
+    return 'Sent a confirmation request';
+  }
+
+  return text;
+}
+
 export async function getConversations(userId: string) {
   const supabase = await createClient();
 
@@ -40,34 +70,19 @@ export async function getConversations(userId: string) {
       // Supabase may return the joined listing as an array or a single object
       const listing = Array.isArray(c.listing) ? c.listing[0] : c.listing;
 
-      const { data: lastMessage } = await supabase
+      const { data: messages } = await supabase
         .from('message')
         .select('text, created_at, user')
         .eq('conversation_id', c.conversation_id)
         .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+        .limit(30);
 
       const user_role = (c.buyer_id === userId ? 'buyer' : 'seller') as 'buyer' | 'seller';
-      
-      // JSON parsing logic for special message types
-      let lastMessageText = lastMessage?.text || null;
-      if (lastMessageText) {
-          try {
-            const parsed = JSON.parse(lastMessageText);
-            if (parsed.type === 'confirmation') {
-              lastMessageText = 'Sent a confirmation request';
-            } else if (parsed.type === 'confirmation_accepted') {
-              lastMessageText = 'Sale confirmed';
-            } else if (parsed.type === 'confirmation_declined') {
-              lastMessageText = 'Confirmation declined';
-            } else if (parsed.type === 'item_sold') {
-              lastMessageText = 'Item has been sold';
-            } else if (parsed.type === 'confirmation_response') {
-              lastMessageText = `Response: ${parsed.response === 'yes' ? 'Yes' : 'No'}`;
-            }
-          } catch { /* Not JSON, use as-is */ }
-      }
+      const hasAcceptedSale = (messages || []).some((message) => getMessageType(message.text) === 'confirmation_accepted');
+      const deal_status = hasAcceptedSale ? (user_role === 'buyer' ? 'bought' : 'sold') : null;
+
+      const previewMessage = (messages || []).find((message) => getPreviewText(message.text) !== null);
+      const lastMessageText = previewMessage ? getPreviewText(previewMessage.text) : null;
 
       return {
         conversation_id: c.conversation_id,
@@ -77,9 +92,10 @@ export async function getConversations(userId: string) {
         buyer_id: c.buyer_id,
         seller_id: c.seller_id,
         user_role,
+        deal_status,
         last_message: lastMessageText,
-        last_message_time: lastMessage?.created_at || null,
-        last_message_sender: lastMessage?.user || null,
+        last_message_time: previewMessage?.created_at || null,
+        last_message_sender: previewMessage?.user || null,
         created_at: c.created_at,
       };
     })

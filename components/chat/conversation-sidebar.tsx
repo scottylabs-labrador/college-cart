@@ -1,6 +1,7 @@
 'use client';
 
 import { Conversation } from '@/types/chat';
+import { useState } from 'react';
 import ConversationListItem from './conversation-list-item';
 import { MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -23,28 +24,63 @@ export default function ConversationSidebar({
   userId,
   lastReadTimestamps,
 }: ConversationSidebarProps) {
+  const [activeTab, setActiveTab] = useState<'all' | 'buying' | 'selling'>('all');
+
+  const filteredConversations = conversations.filter((conv) => {
+    if (activeTab === 'all') return true;
+    if (activeTab === 'buying') return conv.user_role === 'buyer';
+    return conv.user_role === 'seller';
+  });
+
   return (
     <aside className={`w-full md:w-80 border-r bg-background flex flex-col ${className}`}>
       {/* Header */}
-      <div className="p-4 border-b">
+      <div className="p-4 border-b space-y-3">
         <h2 className="text-xl font-semibold">Messages</h2>
+        <div className="flex items-center gap-2">
+          {(['all', 'buying', 'selling'] as const).map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setActiveTab(tab)}
+              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                activeTab === tab
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
+              }`}
+            >
+              {tab === 'all' ? 'All' : tab === 'buying' ? 'Buying' : 'Selling'}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Conversation list */}
       <div className="flex-1 overflow-y-auto">
-        {conversations.length === 0 ? (
+        {filteredConversations.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-8 text-center h-full">
             <MessageCircle className="h-16 w-16 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No conversations yet</h3>
-            <p className="text-muted-foreground mb-4 text-sm">
-              Start browsing listings to connect with sellers
-            </p>
-            <Button asChild>
-              <Link href="/">Browse Listings</Link>
-            </Button>
+            {conversations.length === 0 ? (
+              <>
+                <h3 className="text-lg font-semibold mb-2">No conversations yet</h3>
+                <p className="text-muted-foreground mb-4 text-sm">
+                  Start browsing listings to connect with sellers
+                </p>
+                <Button asChild>
+                  <Link href="/">Browse Listings</Link>
+                </Button>
+              </>
+            ) : (
+              <>
+                <h3 className="text-lg font-semibold mb-2">No matches in this tab</h3>
+                <p className="text-muted-foreground text-sm">
+                  Try switching to a different filter
+                </p>
+              </>
+            )}
           </div>
         ) : (
-          conversations.map((conv) => {
+          filteredConversations.map((conv) => {
             const lastRead = lastReadTimestamps[conv.conversation_id];
             const hasUnread =
               conv.last_message_sender !== null &&

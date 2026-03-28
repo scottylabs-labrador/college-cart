@@ -1,7 +1,6 @@
 'use client';
 
 import { Conversation } from '@/types/chat';
-import { Badge } from '@/components/ui/badge';
 
 type ConversationListItemProps = {
   conversation: Conversation;
@@ -55,18 +54,17 @@ export default function ConversationListItem({
               {conversation.listing_title}
             </h3>
           </div>
-          <Badge
-            className={`
-              text-xs flex-shrink-0
-              ${isSeller
-                ? 'bg-purple-100 text-purple-800 border-purple-300'
-                : 'bg-green-100 text-green-800 border-green-300'
-              }
-            `}
-            variant="outline"
-          >
-            {isSeller ? 'Selling' : 'Buying'}
-          </Badge>
+          {conversation.deal_status && (
+            <span
+              className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                conversation.deal_status === 'sold'
+                  ? 'bg-purple-100 text-purple-800'
+                  : 'bg-green-100 text-green-800'
+              }`}
+            >
+              {conversation.deal_status}
+            </span>
+          )}
         </div>
 
         {/* Last message preview */}

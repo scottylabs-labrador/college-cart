@@ -88,31 +88,6 @@ export async function POST(request: Request) {
           return NextResponse.json({ success: false, error: 'Failed to send acceptance' }, { status: 500 });
         }
 
-        // 3. Insert item_sold messages into all OTHER conversations for the same listing
-        const { data: otherConversations, error: otherConvError } = await supabase
-          .from('conversation')
-          .select('conversation_id')
-          .eq('listing_id', conversation.listing_id)
-          .neq('conversation_id', chat);
-
-        if (!otherConvError && otherConversations && otherConversations.length > 0) {
-          const soldMessages = otherConversations.map((conv) => ({
-            user: 'system',
-            text: JSON.stringify({ type: 'item_sold' }),
-            conversation_id: conv.conversation_id,
-            message_type: 'text',
-          }));
-
-          const { error: soldMsgError } = await supabase
-            .from('message')
-            .insert(soldMessages);
-
-          if (soldMsgError) {
-            console.error('Error inserting sold messages:', soldMsgError);
-            // Non-critical — don't fail the whole request
-          }
-        }
-
         // Track sale confirmed event (server-side)
         const posthog = getPostHogClient();
         posthog.capture({
