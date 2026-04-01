@@ -1,6 +1,9 @@
 import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import EditItemClient from './edit-item-client';
+import { s3, BUCKET } from '@/lib/s3';
+import { GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,12 +35,41 @@ export default async function EditItemPage({
 
   const existingImages: { id: string; url: string }[] = [];
   if (images && !imagesError) {
-    for (const img of images as { listing_image_id: string; storage?: { base64?: string; type?: string } }[]) {
+    for (const img of images as any[]) {
       const storage = img.storage;
-      if (storage && storage.base64) {
+      if (!storage) continue;
+
+      let imageUrl = '';
+
+      // Check if it's a Tigris image
+      const isTigrisUrl = storage.url?.includes("tigris.dev");
+      const key = storage.key || (isTigrisUrl ? storage.url?.split(".dev/").pop() : null);
+
+      if (key) {
+        try {
+          imageUrl = await getSignedUrl(
+            s3,
+            new GetObjectCommand({ Bucket: BUCKET, Key: key }),
+            { expiresIn: 3600 }
+          );
+        } catch (e) {
+          console.error("Failed to generate presigned URL on server for", key, e);
+        }
+      }
+
+      // Fallback
+      if (!imageUrl) {
+        if (storage.url) {
+          imageUrl = storage.url;
+        } else if (storage.base64) {
+          imageUrl = `data:${storage.type || 'image/jpeg'};base64,${storage.base64}`;
+        }
+      }
+
+      if (imageUrl) {
         existingImages.push({
-          id: img.listing_image_id,
-          url: `data:${storage.type || 'image/jpeg'};base64,${storage.base64}`,
+          id: img.image_id.toString(),
+          url: imageUrl,
         });
       }
     }

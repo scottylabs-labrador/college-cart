@@ -124,12 +124,44 @@ export default function EditItemClient({ listing }: { listing: ListingProps }) {
       formData.append("retained_image_ids", img.id.toString());
     });
     
-    // Append all new images
-    newImagePreviews.forEach((image) => {
-      formData.append("images", image.file);
-    });
-
     try {
+      // 1. Upload NEW images to S3 using presigned URLs
+      const newImageMetadata = await Promise.all(
+        newImagePreviews.map(async (image) => {
+          const file = image.file;
+          
+          // Get presigned upload URL
+          const res = await fetch("/api/upload", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ filename: file.name, contentType: file.type }),
+          });
+          
+          if (!res.ok) throw new Error("Failed to get upload URL");
+          
+          const { url, key } = await res.json();
+
+          // Upload directly to S3/Tigris
+          const uploadRes = await fetch(url, {
+            method: "PUT",
+            headers: { "Content-Type": file.type },
+            body: file,
+          });
+
+          if (!uploadRes.ok) throw new Error("Failed to upload image to storage");
+
+          return {
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            key: key,
+          };
+        })
+      );
+
+      // 2. Add new image keys to formData
+      formData.append("new_image_keys", JSON.stringify(newImageMetadata));
+
       const response = await fetch(`/edit-item/${listing.id}/action`, {
         method: "POST",
         body: formData,

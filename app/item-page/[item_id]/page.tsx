@@ -2,13 +2,19 @@ import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import ItemPageClient from './item-page-client';
 
+import { s3, BUCKET } from '@/lib/s3';
+import { GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+
 type ListingImage = {
-  listing_image_id: number;
+  image_id: number;
   listing_id: number;
   storage: {
-    base64: string;
+    base64?: string;
+    url?: string;
     name: string;
     type: string;
+    key?: string;
   };
   sort_order: number;
 };
@@ -90,16 +96,42 @@ export default async function ItemPage({
   if (categoryError) console.error("Couldn't fetch category name", categoryError);
 
 
-  // Convert base64 images to data URLs
+  // Convert images to presigned URLs or use existing formats
   const imageUrls = images && !imagesError
-    ? images.map((img: ListingImage) => {
-        const storage = img.storage;
-        if (storage && storage.base64) {
-          return `data:${storage.type || 'image/jpeg'};base64,${storage.base64}`;
-        }
-        return null;
-      }).filter(Boolean) as string[]
+    ? await Promise.all(
+        images.map(async (img: ListingImage) => {
+          const storage = img.storage;
+          if (!storage) return null;
+
+          // Check if it's a Tigris image
+          const isTigrisUrl = storage.url?.includes("tigris.dev");
+          const key = storage.key || (isTigrisUrl ? storage.url?.split(".dev/").pop() : null);
+
+          if (key) {
+            try {
+              return await getSignedUrl(
+                s3,
+                new GetObjectCommand({ Bucket: BUCKET, Key: key }),
+                { expiresIn: 3600 }
+              );
+            } catch (e) {
+              console.error("Failed to generate presigned URL on server for", key, e);
+            }
+          }
+
+          // Fallback to direct URL or base64
+          if (storage.url) {
+            return storage.url;
+          }
+          if (storage.base64) {
+            return `data:${storage.type || 'image/jpeg'};base64,${storage.base64}`;
+          }
+          return null;
+        })
+      )
     : [];
+  
+  const finalImageUrls = imageUrls.filter(Boolean) as string[];
 
   const listingData = listing as Listing;
 
@@ -117,8 +149,8 @@ export default async function ItemPage({
         dateListed: listingData.created_at
           ? new Date(listingData.created_at).toLocaleDateString()
           : 'Unknown',
-        imageUrls: imageUrls.length > 0 ? imageUrls : [],
-        category: categoryName.category_name, // TODO: Add category lookup if you have category_id
+        imageUrls: finalImageUrls.length > 0 ? finalImageUrls : [],
+        category: categoryName?.category_name || 'Other',
       }}
     />
   );

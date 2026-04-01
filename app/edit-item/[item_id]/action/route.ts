@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getPostHogClient } from '@/lib/posthog-server'
+import { uploadImage } from '@/lib/storage'
 
 export async function POST(request: Request, { params }: { params: Promise<{ item_id: string }> }) {
   try {
@@ -81,51 +82,57 @@ export async function POST(request: Request, { params }: { params: Promise<{ ite
          .from('listing_image')
          .delete()
          .eq('listing_id', item_id)
-         .not('listing_image_id', 'in', `(${retainedImageIds.join(',')})`)
+         .not('image_id', 'in', `(${retainedImageIds.join(',')})`)
     } else {
        await supabase.from('listing_image').delete().eq('listing_id', item_id)
     }
 
-    // Upload new images
-    if (newImageFiles.length > 0) {
-      // Find current max sort_order
-      const { data: maxSortData } = await supabase
-        .from('listing_image')
-        .select('sort_order')
-        .eq('listing_id', item_id)
-        .order('sort_order', { ascending: false })
-        .limit(1)
+    const newImageKeysJson = formData.get('new_image_keys') as string
+    
+    if (newImageKeysJson) {
+      const newImageItems = JSON.parse(newImageKeysJson) as Array<{
+        name: string,
+        type: string,
+        size: number,
+        key: string
+      }>
 
-      const startSortOrder = maxSortData && maxSortData.length > 0 ? maxSortData[0].sort_order + 1 : 0
+      if (newImageItems.length > 0) {
+        // Find current max sort_order
+        const { data: maxSortData } = await supabase
+          .from('listing_image')
+          .select('sort_order')
+          .eq('listing_id', item_id)
+          .order('sort_order', { ascending: false })
+          .limit(1)
 
-      const imagesPayload = await Promise.all(
-        newImageFiles.map(async (file, index) => {
-          const arrayBuffer = await file.arrayBuffer()
-          const base64 = Buffer.from(arrayBuffer).toString('base64')
+        const startSortOrder = maxSortData && maxSortData.length > 0 ? (maxSortData[0].sort_order as number) + 1 : 0
 
+        const imagesPayload = newImageItems.map((item, index) => {
           return {
             listing_id: item_id,
             storage: {
-              name: file.name,
-              type: file.type,
-              size: file.size,
-              base64,
-              encoding: 'base64',
+              name: item.name,
+              type: item.type,
+              size: item.size,
+              key: item.key,
+              // Store the direct URL as a fallback
+              url: `https://${process.env.S3_BUCKET}.fly.storage.tigris.dev/${item.key}`,
             },
             sort_order: startSortOrder + index,
           }
         })
-      )
 
-      const { error: imageError } = await supabase.from('listing_image').insert(imagesPayload)
+        const { error: imageError } = await supabase.from('listing_image').insert(imagesPayload)
 
-      if (imageError) {
-        console.error('Error inserting listing images:', imageError)
-        return NextResponse.json({
-          success: false,
-          error: `Failed to upload images: ${imageError.message}`,
-          details: imageError
-        }, { status: 500 })
+        if (imageError) {
+          console.error('Error inserting listing images:', imageError)
+          return NextResponse.json({
+            success: false,
+            error: `Failed to save new image references: ${imageError.message}`,
+            details: imageError
+          }, { status: 500 })
+        }
       }
     }
 

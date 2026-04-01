@@ -431,7 +431,7 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
                       src={currentImage}
                       alt={listing.title}
                       fill
-                      unoptimized
+                      unoptimized={currentImage.startsWith('data:')}
                       sizes="(max-width: 1024px) 100vw, 50vw"
                       className="object-cover cursor-zoom-in"
                       onClick={openLightbox}
@@ -494,7 +494,7 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
                       src={url}
                       alt={`${listing.title} ${index + 1}`}
                       fill
-                      unoptimized
+                      unoptimized={url.startsWith('data:')}
                       sizes="12.5vw"
                       className="object-cover"
                     />

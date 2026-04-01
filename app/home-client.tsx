@@ -7,6 +7,8 @@ import { createClient } from "@supabase/supabase-js";
 import { Card } from "@/components/ui/card";
 import MainHeader from "@/components/main-header";
 import Image from "next/image";
+import { getImageUrl } from "@/lib/image-utils";
+
 
 import furnitureImg from "@/app/assets/landing/furniture.png";
 import appliancesImg from "@/app/assets/landing/appliances.png";
@@ -17,10 +19,11 @@ import commuteImg from "@/app/assets/landing/commute.png";
 import freeandfunImg from "@/app/assets/landing/freeandfun.png";
 
 type ListingImage = {
-  listing_image_id: number;
+  image_id: number;
   listing_id: number;
   storage: {
-    base64: string;
+    base64?: string;
+    url?: string;
     name: string;
     type: string;
   };
@@ -201,13 +204,8 @@ export default function HomeClient() {
               .order("sort_order", { ascending: true })
               .limit(1);
 
-            let imageUrl = null;
-            if (images && images.length > 0) {
-              const img = images[0] as ListingImage;
-              if (img.storage && img.storage.base64) {
-                imageUrl = `data:${img.storage.type || "image/jpeg"};base64,${img.storage.base64}`;
-              }
-            }
+            let imageUrl = await getImageUrl(images?.[0]?.storage);
+
 
             return {
               id: listing.listing_id.toString(),
@@ -284,7 +282,7 @@ export default function HomeClient() {
                         src={listing.imageUrl}
                         alt={listing.title}
                         fill
-                        unoptimized
+                        unoptimized={listing.imageUrl.startsWith("data:")}
                         sizes="(max-width: 768px) 50vw, 25vw"
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
                       />

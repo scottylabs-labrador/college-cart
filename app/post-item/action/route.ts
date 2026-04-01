@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getPostHogClient } from '@/lib/posthog-server'
+import { uploadImage } from '@/lib/storage'
 
 export async function POST(request: Request) {
   try {
@@ -75,35 +76,42 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Listing ID missing after insert.' }, { status: 500 })
     }
 
-    if (imageFiles.length > 0) {
-      const imagesPayload = await Promise.all(
-        imageFiles.map(async (file, index) => {
-          const arrayBuffer = await file.arrayBuffer()
-          const base64 = Buffer.from(arrayBuffer).toString('base64')
+    const imageKeysJson = formData.get('image_keys') as string
+    
+    if (imageKeysJson) {
+      const imageItems = JSON.parse(imageKeysJson) as Array<{
+        name: string,
+        type: string,
+        size: number,
+        key: string
+      }>
 
+      if (imageItems.length > 0) {
+        const imagesPayload = imageItems.map((item, index) => {
           return {
             listing_id: listingId,
             storage: {
-              name: file.name,
-              type: file.type,
-              size: file.size,
-              base64,
-              encoding: 'base64',
+              name: item.name,
+              type: item.type,
+              size: item.size,
+              key: item.key,
+              // Store the direct URL as a fallback, but we'll prefer the key for presigned URLs
+              url: `https://${process.env.S3_BUCKET}.fly.storage.tigris.dev/${item.key}`,
             },
             sort_order: index,
           }
         })
-      )
 
-      const { error: imageError } = await supabase.from('listing_image').insert(imagesPayload)
+        const { error: imageError } = await supabase.from('listing_image').insert(imagesPayload)
 
-      if (imageError) {
-        console.error('Error inserting listing images:', imageError)
-        return NextResponse.json({
-          success: false,
-          error: `Failed to upload images: ${imageError.message}`,
-          details: imageError
-        }, { status: 500 })
+        if (imageError) {
+          console.error('Error inserting listing images:', imageError)
+          return NextResponse.json({
+            success: false,
+            error: `Failed to save image references: ${imageError.message}`,
+            details: imageError
+          }, { status: 500 })
+        }
       }
     }
 

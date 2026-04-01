@@ -140,14 +140,45 @@ export default function PostItemPage() {
     formData.append("status", "active"); 
     formData.append("user_id", userId || "");
     formData.append("category", (category).toString());
-    // Location is optional, so we don't need to send it if it's not in the form
     
-    // Append all images from imagePreviews
-    imagePreviews.forEach((image) => {
-      formData.append("images", image.file);
-    });
-
     try {
+      // 1. Upload images to S3 using presigned URLs
+      const imageMetadata = await Promise.all(
+        imagePreviews.map(async (image) => {
+          const file = image.file;
+          
+          // Get presigned upload URL
+          const res = await fetch("/api/upload", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ filename: file.name, contentType: file.type }),
+          });
+          
+          if (!res.ok) throw new Error("Failed to get upload URL");
+          
+          const { url, key } = await res.json();
+
+          // Upload directly to S3/Tigris
+          const uploadRes = await fetch(url, {
+            method: "PUT",
+            headers: { "Content-Type": file.type },
+            body: file,
+          });
+
+          if (!uploadRes.ok) throw new Error("Failed to upload image to storage");
+
+          return {
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            key: key,
+          };
+        })
+      );
+
+      // 2. Append the image metadata (keys) to the form data
+      formData.append("image_keys", JSON.stringify(imageMetadata));
+
       const response = await fetch("/post-item/action", {
         method: "POST",
         body: formData,
@@ -207,7 +238,7 @@ export default function PostItemPage() {
       // Track network error with exception capture
       posthog.captureException(error);
       posthog.capture('listing_creation_failed', {
-        error_message: 'Network error',
+        error_message: (error as Error).message || 'Network error',
         category: category,
         condition: condition,
       });

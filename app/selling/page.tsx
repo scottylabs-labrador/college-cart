@@ -8,13 +8,16 @@ import { Card } from "@/components/ui/card";
 import Image from "next/image";
 import { Clock } from "lucide-react";
 import MainHeader from "@/components/main-header";
+import { getImageUrl } from "@/lib/image-utils";
 import RequireLogin from "@/components/require_login";
 
+
 type ListingImage = {
-  listing_image_id: number;
+  image_id: number;
   listing_id: number;
   storage: {
-    base64: string;
+    base64?: string;
+    url?: string;
     name: string;
     type: string;
   };
@@ -87,7 +90,7 @@ function ListingGrid({ items, emptyMessage }: { items: ListingDisplay[]; emptyMe
                 src={listing.imageUrl}
                 alt={listing.title}
                 fill
-                unoptimized
+                unoptimized={listing.imageUrl.startsWith("data:")}
                 sizes="(max-width: 768px) 50vw, 25vw"
                 className={`object-cover group-hover:scale-105 transition-transform duration-300 ${
                   listing.status === 'sold' ? 'opacity-60' : ''
@@ -145,13 +148,8 @@ export default function SellingPage() {
             .order("sort_order", { ascending: true })
             .limit(1);
 
-          let imageUrl = null;
-          if (images && images.length > 0) {
-            const img = images[0] as ListingImage;
-            if (img.storage && img.storage.base64) {
-              imageUrl = `data:${img.storage.type || "image/jpeg"};base64,${img.storage.base64}`;
-            }
-          }
+          let imageUrl = await getImageUrl(images?.[0]?.storage);
+
 
           return {
             id: listing.listing_id.toString(),

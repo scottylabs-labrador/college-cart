@@ -71,7 +71,7 @@ export default function CategoryClient({ listings, name }: { listings: ListingIt
                         src={listing.imageUrl}
                         alt={listing.title}
                         fill
-                        unoptimized
+                        unoptimized={listing.imageUrl.startsWith("data:")}
                         sizes="(max-width: 768px) 50vw, 25vw"
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
                       />

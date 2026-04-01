@@ -7,12 +7,15 @@ import { useEffect } from 'react'
 import { useState } from 'react';
 import FavoriteClient from "./favorite-client";
 import RequireLogin from "@/components/require_login";
+import { getImageUrl } from "@/lib/image-utils";
+
 
 type ListingImage = {
-  listing_image_id: number;
+  image_id: number;
   listing_id: number;
   storage: {
-    base64: string;
+    base64?: string;
+    url?: string;
     name: string;
     type: string;
   };
@@ -104,13 +107,8 @@ export default function CollegeCartHome() {
             .order("sort_order", { ascending: true })
             .limit(1);
 
-        let imageUrl = null;
-        if (images && images.length > 0) {
-            const img = images[0] as ListingImage;
-            if (img.storage && img.storage.base64) {
-            imageUrl = `data:${img.storage.type || "image/jpeg"};base64,${img.storage.base64}`;
-            }
-        }
+        let imageUrl = await getImageUrl(images?.[0]?.storage);
+
 
         return {
             id: listing.listing_id.toString(),
