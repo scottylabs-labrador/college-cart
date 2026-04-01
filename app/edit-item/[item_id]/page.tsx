@@ -35,7 +35,7 @@ export default async function EditItemPage({
 
   const existingImages: { id: string; url: string }[] = [];
   if (images && !imagesError) {
-    for (const img of images as any[]) {
+    for (const img of images as { image_id: number; storage: { url?: string; key?: string; base64?: string; type?: string } }[]) {
       const storage = img.storage;
       if (!storage) continue;
 

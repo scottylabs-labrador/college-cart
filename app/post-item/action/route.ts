@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getPostHogClient } from '@/lib/posthog-server'
-import { uploadImage } from '@/lib/storage'
 
 export async function POST(request: Request) {
   try {

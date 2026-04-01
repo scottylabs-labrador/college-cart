@@ -18,18 +18,6 @@ import clothingImg from "@/app/assets/landing/clothing.png";
 import commuteImg from "@/app/assets/landing/commute.png";
 import freeandfunImg from "@/app/assets/landing/freeandfun.png";
 
-type ListingImage = {
-  image_id: number;
-  listing_id: number;
-  storage: {
-    base64?: string;
-    url?: string;
-    name: string;
-    type: string;
-  };
-  sort_order: number;
-};
-
 type Listing = {
   listing_id: number;
   seller_id: string;
@@ -204,7 +192,7 @@ export default function HomeClient() {
               .order("sort_order", { ascending: true })
               .limit(1);
 
-            let imageUrl = await getImageUrl(images?.[0]?.storage);
+            const imageUrl = await getImageUrl(images?.[0]?.storage);
 
 
             return {

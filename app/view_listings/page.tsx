@@ -12,18 +12,6 @@ import MainHeader from "@/components/main-header";
 import LoadingViewListings from "./loading";
 import posthog from "posthog-js";
 
-type ListingImage = {
-  image_id: number;
-  listing_id: number;
-  storage: {
-    base64?: string;
-    url?: string;
-    name: string;
-    type: string;
-  };
-  sort_order: number;
-};
-
 type Listing = {
   listing_id: number | string;
   seller_id: number | string;
@@ -130,7 +118,7 @@ export default function ViewListingsPage() {
             .order("sort_order", { ascending: true })
             .limit(1);
 
-          let imageUrl = await getImageUrl(images?.[0]?.storage);
+          const imageUrl = await getImageUrl(images?.[0]?.storage);
 
 
           return {

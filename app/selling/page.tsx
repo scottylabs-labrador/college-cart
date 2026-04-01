@@ -12,18 +12,6 @@ import { getImageUrl } from "@/lib/image-utils";
 import RequireLogin from "@/components/require_login";
 
 
-type ListingImage = {
-  image_id: number;
-  listing_id: number;
-  storage: {
-    base64?: string;
-    url?: string;
-    name: string;
-    type: string;
-  };
-  sort_order: number;
-};
-
 type Listing = {
   listing_id: number;
   seller_id: string;
@@ -148,7 +136,7 @@ export default function SellingPage() {
             .order("sort_order", { ascending: true })
             .limit(1);
 
-          let imageUrl = await getImageUrl(images?.[0]?.storage);
+          const imageUrl = await getImageUrl(images?.[0]?.storage);
 
 
           return {
