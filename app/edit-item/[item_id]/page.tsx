@@ -29,13 +29,13 @@ export default async function EditItemPage({
   // Fetch listing images
   const { data: images, error: imagesError } = await supabase
     .from('listing_image')
-    .select('*')
+    .select('image_id, listing_id, sort_order, storage')
     .eq('listing_id', item_id)
     .order('sort_order', { ascending: true });
 
   const existingImages: { id: string; url: string }[] = [];
   if (images && !imagesError) {
-    for (const img of images as { image_id: number; storage: { url?: string; key?: string; base64?: string; type?: string } }[]) {
+    for (const img of images as { image_id: number; storage: { url?: string; key?: string; type?: string } }[]) {
       const storage = img.storage;
       if (!storage) continue;
 
@@ -58,12 +58,8 @@ export default async function EditItemPage({
       }
 
       // Fallback
-      if (!imageUrl) {
-        if (storage.url) {
-          imageUrl = storage.url;
-        } else if (storage.base64) {
-          imageUrl = `data:${storage.type || 'image/jpeg'};base64,${storage.base64}`;
-        }
+      if (!imageUrl && storage.url) {
+        imageUrl = storage.url;
       }
 
       if (imageUrl) {

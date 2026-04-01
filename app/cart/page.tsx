@@ -89,7 +89,7 @@ export default function CollegeCartHome() {
         (listings || []).map(async (listing: Listing) => {
         const { data: images } = await supabase
             .from("listing_image")
-            .select("*")
+            .select("image_id, listing_id, sort_order, storage")
             .eq("listing_id", listing.listing_id)
             .order("sort_order", { ascending: true })
             .limit(1);

@@ -10,7 +10,6 @@ type ListingImage = {
   image_id: number;
   listing_id: number;
   storage: {
-    base64?: string;
     url?: string;
     name: string;
     type: string;
@@ -80,7 +79,7 @@ export default async function ItemPage({
   // Fetch listing images
   const { data: images, error: imagesError } = await supabase
     .from('listing_image')
-    .select('*')
+    .select('image_id, listing_id, sort_order, storage')
     .eq('listing_id', item_id)
     .order('sort_order', { ascending: true });
 
@@ -119,12 +118,8 @@ export default async function ItemPage({
             }
           }
 
-          // Fallback to direct URL or base64
           if (storage.url) {
             return storage.url;
-          }
-          if (storage.base64) {
-            return `data:${storage.type || 'image/jpeg'};base64,${storage.base64}`;
           }
           return null;
         })

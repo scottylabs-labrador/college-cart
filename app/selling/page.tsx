@@ -132,11 +132,11 @@ export default function SellingPage() {
 
       const { data: allImages } = await supabase
         .from("listing_image")
-        .select("*")
+        .select("image_id, listing_id, sort_order, storage")
         .in("listing_id", listingIds)
         .order("sort_order", { ascending: true });
 
-      const imageByListing = new Map<number, { storage: { url?: string; base64?: string; type?: string; key?: string } }>();
+      const imageByListing = new Map<number, { storage: { url?: string; type?: string; key?: string } }>();
       for (const img of allImages || []) {
         if (!imageByListing.has(img.listing_id)) {
           imageByListing.set(img.listing_id, img);

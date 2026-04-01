@@ -1,4 +1,4 @@
-type StorageObject = { url?: string; base64?: string; type?: string; key?: string };
+type StorageObject = { url?: string; type?: string; key?: string };
 
 const FALLBACK_IMAGE = "/scotty-tote-dummy.jpg";
 
@@ -10,7 +10,6 @@ function extractKey(storage: StorageObject | undefined | null): string | null {
 
 function resolveLocal(storage: StorageObject): string {
   if (storage.url) return storage.url;
-  if (storage.base64) return `data:${storage.type || "image/jpeg"};base64,${storage.base64}`;
   return FALLBACK_IMAGE;
 }
 

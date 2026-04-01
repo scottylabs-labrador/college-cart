@@ -13,7 +13,6 @@ const supabase = createClient(
 
 type StorageObject = {
   url?: string;
-  base64?: string;
   type?: string;
   key?: string;
 };
@@ -48,8 +47,6 @@ async function resolveImageUrl(
   }
 
   if (storage.url) return storage.url;
-  if (storage.base64)
-    return `data:${storage.type || "image/jpeg"};base64,${storage.base64}`;
   return FALLBACK_IMAGE;
 }
 
@@ -69,7 +66,7 @@ function formatPrice(priceCents: number | null, currency: string | null) {
 export default async function CollegeCartHome() {
   const { data, error } = await supabase
     .from("listing")
-    .select("*, listing_image(*)")
+    .select("*, listing_image(image_id, listing_id, sort_order, storage)")
     .eq("status", "active")
     .order("created_at", { ascending: false })
     .limit(8);
