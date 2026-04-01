@@ -79,7 +79,7 @@ export async function getConversations(userId: string) {
 
       const user_role = (c.buyer_id === userId ? 'buyer' : 'seller') as 'buyer' | 'seller';
       const hasAcceptedSale = (messages || []).some((message) => getMessageType(message.text) === 'confirmation_accepted');
-      const deal_status = hasAcceptedSale ? (user_role === 'buyer' ? 'bought' : 'sold') : null;
+      const deal_status = hasAcceptedSale ? (user_role === 'buyer' ? 'bought' as const : 'sold' as const) : null;
 
       const previewMessage = (messages || []).find((message) => getPreviewText(message.text) !== null);
       const lastMessageText = previewMessage ? getPreviewText(previewMessage.text) : null;
