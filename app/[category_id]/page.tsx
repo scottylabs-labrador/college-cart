@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 import { useSearchParams } from 'next/navigation';
 import CategoryClient from './category-client';
 import MainHeader from '@/components/main-header';
-import { getImageUrl } from '@/lib/image-utils';
+import { getImageUrlsBatch } from '@/lib/image-utils';
 
 type Listing = {
   listing_id: number;
@@ -84,28 +84,35 @@ export default function CategoryPage(){
         return;
       }
 
-      const listingsWithImages = await Promise.all(
-        (categoryData || []).map(async (listing: Listing) => {
-          const { data: images } = await supabase
-            .from("listing_image")
-            .select("*")
-            .eq("listing_id", listing.listing_id)
-            .order("sort_order", { ascending: true })
-            .limit(1);
+      const listings_ = categoryData || [];
+      const listingIds = listings_.map((l: Listing) => l.listing_id);
 
-          const imageUrl = await getImageUrl(images?.[0]?.storage);
+      const { data: allImages } = await supabase
+        .from("listing_image")
+        .select("*")
+        .in("listing_id", listingIds)
+        .order("sort_order", { ascending: true });
 
+      const imageByListing = new Map<number, { storage: { url?: string; base64?: string; type?: string; key?: string } }>();
+      for (const img of allImages || []) {
+        if (!imageByListing.has(img.listing_id)) {
+          imageByListing.set(img.listing_id, img);
+        }
+      }
 
-          return {
-            id: listing.listing_id.toString(),
-            title: listing.title || "Untitled Listing",
-            price: listing.price_cents ? listing.price_cents / 100 : 0,
-            priceFormatted: formatPrice(listing.price_cents, listing.currency),
-            imageUrl: imageUrl || "/scotty-tote-dummy.jpg",
-            href: `/item-page/${listing.listing_id}`,
-          };
-        })
+      const storageObjects = listings_.map(
+        (l: Listing) => imageByListing.get(l.listing_id)?.storage
       );
+      const imageUrls = await getImageUrlsBatch(storageObjects);
+
+      const listingsWithImages = listings_.map((listing: Listing, i: number) => ({
+        id: listing.listing_id.toString(),
+        title: listing.title || "Untitled Listing",
+        price: listing.price_cents ? listing.price_cents / 100 : 0,
+        priceFormatted: formatPrice(listing.price_cents, listing.currency),
+        imageUrl: imageUrls[i] || "/scotty-tote-dummy.jpg",
+        href: `/item-page/${listing.listing_id}`,
+      }));
 
       if (isActive) {
         setCategory(listingsWithImages);

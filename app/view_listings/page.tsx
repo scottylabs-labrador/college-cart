@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import Image from "next/image";
-import { getImageUrl } from "@/lib/image-utils";
+import { getImageUrlsBatch } from "@/lib/image-utils";
 
 import { Card } from "@/components/ui/card";
 import MainHeader from "@/components/main-header";
@@ -109,27 +109,34 @@ export default function ViewListingsPage() {
         return;
       }
 
-      const listingsWithImages: ListingDisplay[] = await Promise.all(
-        listingsData.map(async (listing) => {
-          const { data: images } = await supabase
-            .from("listing_image")
-            .select("*")
-            .eq("listing_id", listing.listing_id)
-            .order("sort_order", { ascending: true })
-            .limit(1);
+      const listingIds = listingsData.map((l) => l.listing_id);
 
-          const imageUrl = await getImageUrl(images?.[0]?.storage);
+      const { data: allImages } = await supabase
+        .from("listing_image")
+        .select("*")
+        .in("listing_id", listingIds)
+        .order("sort_order", { ascending: true });
 
+      const imageByListing = new Map<string, { storage: { url?: string; base64?: string; type?: string; key?: string } }>();
+      for (const img of allImages || []) {
+        const key = String(img.listing_id);
+        if (!imageByListing.has(key)) {
+          imageByListing.set(key, img);
+        }
+      }
 
-          return {
-            id: listing.listing_id.toString(),
-            title: listing.title || "Untitled listing",
-            priceFormatted: formatPrice(listing.price_cents, listing.currency),
-            imageUrl: imageUrl || "/scotty-tote-dummy.jpg",
-            href: `/item-page/${listing.listing_id}`,
-          };
-        })
+      const storageObjects = listingsData.map(
+        (l) => imageByListing.get(String(l.listing_id))?.storage
       );
+      const imageUrls = await getImageUrlsBatch(storageObjects);
+
+      const listingsWithImages: ListingDisplay[] = listingsData.map((listing, i) => ({
+        id: listing.listing_id.toString(),
+        title: listing.title || "Untitled listing",
+        priceFormatted: formatPrice(listing.price_cents, listing.currency),
+        imageUrl: imageUrls[i] || "/scotty-tote-dummy.jpg",
+        href: `/item-page/${listing.listing_id}`,
+      }));
 
       if (isActive) {
         setListings(listingsWithImages);
