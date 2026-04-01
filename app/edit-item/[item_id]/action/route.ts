@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getPostHogClient } from '@/lib/posthog-server'
-import { uploadImage } from '@/lib/storage'
 
 export async function POST(request: Request, { params }: { params: Promise<{ item_id: string }> }) {
   try {
@@ -17,10 +16,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ ite
     const quantityValue = formData.get('quantity') as string
     const category = formData.get('category') as string
     const retainedImageIds = formData.getAll('retained_image_ids').map(id => parseInt(id as string, 10))
-    const imageEntries = formData.getAll('images')
-    const newImageFiles = imageEntries.filter(
-      (entry): entry is File => entry instanceof File && entry.size > 0
-    )
+
 
     // Validation
     if (!title || title.trim() === '') {
