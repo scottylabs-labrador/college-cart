@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Info, Megaphone } from 'lucide-react';
+import { X, Megaphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function AnnouncementPopup() {
