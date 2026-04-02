@@ -68,8 +68,7 @@ export default async function CollegeCartHome() {
     .from("listing")
     .select("*, listing_image(image_id, listing_id, sort_order, storage)")
     .eq("status", "active")
-    .order("created_at", { ascending: false })
-    .limit(8);
+    .order("created_at", { ascending: false });
 
   if (error) {
     console.error("Error loading listings:", error);
