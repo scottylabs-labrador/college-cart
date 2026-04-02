@@ -5,6 +5,7 @@ import { Clock } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import MainHeader from "@/components/main-header";
 import Image from "next/image";
+import AnnouncementPopup from "@/components/announcement-popup";
 
 import furnitureImg from "@/app/assets/landing/furniture.png";
 import appliancesImg from "@/app/assets/landing/appliances.png";
@@ -126,6 +127,7 @@ function TileCard({
 export default function HomeClient({ listings }: { listings: ListingItem[] }) {
   return (
     <div className="min-h-screen bg-white text-slate-900">
+      <AnnouncementPopup />
       <MainHeader />
 
       <main className="mx-auto max-w-7xl px-4 sm:px-6 py-8 space-y-10">
