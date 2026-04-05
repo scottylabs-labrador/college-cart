@@ -7,6 +7,7 @@ import { Clock } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import MainHeader from "@/components/main-header";
 import posthog from "posthog-js";
+import { isRemoteImageSrc } from "@/lib/storage-image";
 
 type ListingItem = {
   id: string;
@@ -71,7 +72,10 @@ export default function CategoryClient({ listings, name }: { listings: ListingIt
                         src={listing.imageUrl}
                         alt={listing.title}
                         fill
-                        unoptimized={listing.imageUrl.startsWith("data:")}
+                        unoptimized={
+                          isRemoteImageSrc(listing.imageUrl) ||
+                          listing.imageUrl.startsWith("data:")
+                        }
                         sizes="(max-width: 768px) 50vw, 25vw"
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
                       />

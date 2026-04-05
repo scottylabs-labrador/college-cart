@@ -25,47 +25,45 @@ import { signInWithKeycloak, signOutFromAuth, useAuth, useUser } from '@/lib/aut
 import SearchBar from '@/components/search-bar';
 import { useRouter } from 'next/navigation';
 import { Conversation } from '@/types/chat';
-
-const LAST_READ_KEY = 'chat_last_read';
-
-function getLastReadTimestamps(): Record<string, string> {
-  try {
-    return JSON.parse(localStorage.getItem(LAST_READ_KEY) || '{}');
-  } catch {
-    return {};
-  }
-}
+import { CHAT_READ_EVENT, countUnreadConversations } from '@/lib/chat-read-state';
 
 export default function MainHeader() {
   const { isSignedIn, userId } = useAuth();
   const { user } = useUser();
   const router = useRouter();
-  const [hasUnread, setHasUnread] = useState(false);
+  const [unreadChatsCount, setUnreadChatsCount] = useState(0);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
   const checkUnread = useCallback(async () => {
-    if (!isSignedIn || !userId) return;
+    if (!isSignedIn || !userId) {
+      setUnreadChatsCount(0);
+      return;
+    }
     try {
       const res = await fetch('/chat/api/conversations');
       const data = await res.json();
       if (!data.success) return;
-      const timestamps = getLastReadTimestamps();
-      const unread = (data.conversations as Conversation[]).some((conv) => {
-        if (!conv.last_message_sender || conv.last_message_sender === userId) return false;
-        if (!conv.last_message_time) return false;
-        const lastRead = timestamps[conv.conversation_id];
-        return !lastRead || new Date(conv.last_message_time) > new Date(lastRead);
-      });
-      setHasUnread(unread);
+      setUnreadChatsCount(
+        countUnreadConversations(data.conversations as Conversation[], userId),
+      );
     } catch { /* ignore */ }
   }, [isSignedIn, userId]);
 
   useEffect(() => {
     checkUnread();
     const interval = setInterval(checkUnread, 30_000);
-    return () => clearInterval(interval);
+    const onRead = () => {
+      void checkUnread();
+    };
+    window.addEventListener(CHAT_READ_EVENT, onRead);
+    window.addEventListener('focus', onRead);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener(CHAT_READ_EVENT, onRead);
+      window.removeEventListener('focus', onRead);
+    };
   }, [checkUnread]);
 
   const handleChatClick = (e: React.MouseEvent) => {
@@ -145,13 +143,10 @@ export default function MainHeader() {
             )}
             <button
               onClick={handleChatClick}
-              className="hidden md:flex relative"
+              className="hidden md:flex"
               title="Messages"
             >
               <MessageCircle className="h-6 w-6" />
-              {hasUnread && (
-                <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-[#2f167a]" />
-              )}
             </button>
             {isSignedIn && (
               <>
@@ -161,10 +156,21 @@ export default function MainHeader() {
                 <DropdownMenu>
                   <DropdownMenuTrigger
                     className="hidden md:inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-medium text-white hover:bg-white/10 outline-none focus-visible:ring-2 focus-visible:ring-white/50"
-                    aria-label="Account menu"
+                    aria-label={
+                      unreadChatsCount > 0
+                        ? `Account menu, ${unreadChatsCount > 9 ? 'more than 9' : unreadChatsCount} unread chats`
+                        : 'Account menu'
+                    }
                   >
-                    {userLabel}
-                    <ChevronDown className="h-4 w-4 opacity-90" />
+                    <span className="relative inline-flex items-center gap-1">
+                      {userLabel}
+                      {unreadChatsCount > 0 && (
+                        <span className="ml-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-[#2f167a]">
+                          {unreadChatsCount > 9 ? '9+' : unreadChatsCount}
+                        </span>
+                      )}
+                      <ChevronDown className="h-4 w-4 opacity-90" />
+                    </span>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" sideOffset={8} className="min-w-[14rem]">
                     <div className="px-2 py-2 border-b border-border">
@@ -231,12 +237,7 @@ export default function MainHeader() {
             onClick={(e) => { handleChatClick(e); setMobileMenuOpen(false); }}
             className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-white/10 transition-colors"
           >
-            <span className="relative">
-              <MessageCircle className="h-5 w-5" />
-              {hasUnread && (
-                <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-[#2f167a]" />
-              )}
-            </span>
+            <MessageCircle className="h-5 w-5" />
             Chat
           </button>
           <Link
@@ -261,9 +262,21 @@ export default function MainHeader() {
                 href="/account"
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-white/10 transition-colors"
+                aria-label={
+                  unreadChatsCount > 0
+                    ? `Manage account, ${unreadChatsCount > 9 ? 'more than 9' : unreadChatsCount} unread chats`
+                    : undefined
+                }
               >
                 <UserRound className="h-5 w-5" />
-                Manage account
+                <span className="flex flex-1 items-center justify-between gap-2 min-w-0">
+                  <span>Manage account</span>
+                  {unreadChatsCount > 0 && (
+                    <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-[#2f167a]">
+                      {unreadChatsCount > 9 ? '9+' : unreadChatsCount}
+                    </span>
+                  )}
+                </span>
               </Link>
               <button
                 type="button"

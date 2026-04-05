@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import Image from "next/image";
 import { getImageUrlsBatch } from "@/lib/image-utils";
+import { isRemoteImageSrc } from "@/lib/storage-image";
 
 import { Card } from "@/components/ui/card";
 import MainHeader from "@/components/main-header";
@@ -203,7 +204,10 @@ export default function ViewListingsPage() {
                       src={listing.imageUrl}
                       alt={listing.title}
                       fill
-                      unoptimized={listing.imageUrl.startsWith("data:")}
+                      unoptimized={
+                        isRemoteImageSrc(listing.imageUrl) ||
+                        listing.imageUrl.startsWith("data:")
+                      }
                       sizes="(max-width: 768px) 50vw, 25vw"
                       className="object-cover transition-transform duration-300 group-hover:scale-105"
                     />

@@ -5,6 +5,7 @@ import ItemPageClient from './item-page-client';
 import { s3, BUCKET } from '@/lib/s3';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { extractObjectKey, safePublicImageUrl } from '@/lib/storage-image';
 
 type ListingImage = {
   image_id: number;
@@ -102,9 +103,7 @@ export default async function ItemPage({
           const storage = img.storage;
           if (!storage) return null;
 
-          // Check if it's a Tigris image
-          const isTigrisUrl = storage.url?.includes("tigris.dev");
-          const key = storage.key || (isTigrisUrl ? storage.url?.split(".dev/").pop() : null);
+          const key = extractObjectKey(storage);
 
           if (key) {
             try {
@@ -118,10 +117,7 @@ export default async function ItemPage({
             }
           }
 
-          if (storage.url) {
-            return storage.url;
-          }
-          return null;
+          return safePublicImageUrl(storage);
         })
       )
     : [];

@@ -9,6 +9,7 @@ import Image from "next/image";
 import { Clock } from "lucide-react";
 import MainHeader from "@/components/main-header";
 import { getImageUrlsBatch } from "@/lib/image-utils";
+import { isRemoteImageSrc } from "@/lib/storage-image";
 import RequireLogin from "@/components/require_login";
 
 
@@ -78,7 +79,10 @@ function ListingGrid({ items, emptyMessage }: { items: ListingDisplay[]; emptyMe
                 src={listing.imageUrl}
                 alt={listing.title}
                 fill
-                unoptimized={listing.imageUrl.startsWith("data:")}
+                unoptimized={
+                  isRemoteImageSrc(listing.imageUrl) ||
+                  listing.imageUrl.startsWith("data:")
+                }
                 sizes="(max-width: 768px) 50vw, 25vw"
                 className={`object-cover group-hover:scale-105 transition-transform duration-300 ${
                   listing.status === 'sold' ? 'opacity-60' : ''

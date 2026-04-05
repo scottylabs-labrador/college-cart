@@ -2,6 +2,12 @@ import { createClient } from "@supabase/supabase-js";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { s3, BUCKET } from "@/lib/s3";
+import {
+  type StorageObject,
+  STORAGE_FALLBACK_IMAGE,
+  extractObjectKey,
+  safePublicImageUrl,
+} from "@/lib/storage-image";
 import HomeClient from "./home-client";
 
 export const revalidate = 60;
@@ -11,29 +17,12 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
 );
 
-type StorageObject = {
-  url?: string;
-  type?: string;
-  key?: string;
-};
-
-const FALLBACK_IMAGE = "/scotty-tote-dummy.jpg";
-
-function extractKey(storage: StorageObject | undefined | null): string | null {
-  if (!storage) return null;
-  const isTigrisUrl = storage.url?.includes("tigris.dev");
-  return (
-    storage.key ||
-    (isTigrisUrl ? (storage.url?.split(".dev/").pop() ?? null) : null)
-  );
-}
-
 async function resolveImageUrl(
   storage: StorageObject | undefined | null
 ): Promise<string> {
-  if (!storage) return FALLBACK_IMAGE;
+  if (!storage) return STORAGE_FALLBACK_IMAGE;
 
-  const key = extractKey(storage);
+  const key = extractObjectKey(storage);
   if (key) {
     try {
       return await getSignedUrl(
@@ -46,8 +35,9 @@ async function resolveImageUrl(
     }
   }
 
-  if (storage.url) return storage.url;
-  return FALLBACK_IMAGE;
+  const publicUrl = safePublicImageUrl(storage);
+  if (publicUrl) return publicUrl;
+  return STORAGE_FALLBACK_IMAGE;
 }
 
 function formatPrice(priceCents: number | null, currency: string | null) {
@@ -89,7 +79,7 @@ export default async function CollegeCartHome() {
         title: listing.title || "Untitled Listing",
         price: listing.price_cents ? listing.price_cents / 100 : 0,
         priceFormatted: formatPrice(listing.price_cents, listing.currency),
-        imageUrl: imageUrl || FALLBACK_IMAGE,
+        imageUrl: imageUrl || STORAGE_FALLBACK_IMAGE,
         href: `/item-page/${listing.listing_id}`,
       };
     })

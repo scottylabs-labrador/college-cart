@@ -2,6 +2,7 @@
 
 import { Conversation } from '@/types/chat';
 import { useState } from 'react';
+import { isConversationUnread } from '@/lib/chat-read-state';
 import ConversationListItem from './conversation-list-item';
 import { MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -81,12 +82,7 @@ export default function ConversationSidebar({
           </div>
         ) : (
           filteredConversations.map((conv) => {
-            const lastRead = lastReadTimestamps[conv.conversation_id];
-            const hasUnread =
-              conv.last_message_sender !== null &&
-              conv.last_message_sender !== userId &&
-              conv.last_message_time !== null &&
-              (!lastRead || new Date(conv.last_message_time) > new Date(lastRead));
+            const hasUnread = isConversationUnread(conv, userId, lastReadTimestamps);
 
             return (
               <ConversationListItem

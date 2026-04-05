@@ -13,6 +13,7 @@ import MainHeader from '@/components/main-header';
 
 import Image from 'next/image';
 import ChatModal from '@/components/chat-modal';
+import { isRemoteImageSrc } from '@/lib/storage-image';
 import posthog from 'posthog-js';
 
 type ListingData = {
@@ -431,7 +432,10 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
                       src={currentImage}
                       alt={listing.title}
                       fill
-                      unoptimized={currentImage.startsWith('data:')}
+                      unoptimized={
+                        isRemoteImageSrc(currentImage) ||
+                        currentImage.startsWith('data:')
+                      }
                       sizes="(max-width: 1024px) 100vw, 50vw"
                       className="object-cover cursor-zoom-in"
                       onClick={openLightbox}
@@ -494,7 +498,9 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
                       src={url}
                       alt={`${listing.title} ${index + 1}`}
                       fill
-                      unoptimized={url.startsWith('data:')}
+                      unoptimized={
+                        isRemoteImageSrc(url) || url.startsWith('data:')
+                      }
                       sizes="12.5vw"
                       className="object-cover"
                     />

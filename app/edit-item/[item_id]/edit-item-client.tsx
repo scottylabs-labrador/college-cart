@@ -17,6 +17,7 @@ import RequireLogin from '@/components/require_login';
 import { useRouter } from 'next/navigation';
 import MainHeader from '@/components/main-header';
 import Image from 'next/image';
+import { isRemoteImageSrc } from '@/lib/storage-image';
 import posthog from 'posthog-js';
 
 const MAX_IMAGES = 10;
@@ -222,7 +223,7 @@ export default function EditItemClient({ listing }: { listing: ListingProps }) {
                       <div className="grid grid-cols-2 gap-4">
                         {retainedImages.map((image, index) => (
                           <div key={`retained-${image.id}`} className="aspect-square bg-muted rounded-lg relative overflow-hidden border border-muted-foreground/25">
-                            <Image src={image.url} alt={`Retained ${index + 1}`} fill className="object-cover rounded-lg" />
+                            <Image src={image.url} alt={`Retained ${index + 1}`} fill unoptimized={isRemoteImageSrc(image.url) || image.url.startsWith('data:')} className="object-cover rounded-lg" />
                             <button type="button" onClick={() => handleRemoveRetainedImage(index)} className="absolute top-2 right-2 z-10 bg-white/90 hover:bg-white rounded-full p-2 shadow-lg transition-colors" aria-label="Remove image">
                               <X className="w-4 h-4 text-foreground" />
                             </button>
@@ -230,7 +231,7 @@ export default function EditItemClient({ listing }: { listing: ListingProps }) {
                         ))}
                         {newImagePreviews.map((image, index) => (
                           <div key={`new-${index}`} className="aspect-square bg-muted rounded-lg relative overflow-hidden border border-muted-foreground/25">
-                            <Image src={image.url} alt={`New ${index + 1}`} fill className="object-cover rounded-lg" />
+                            <Image src={image.url} alt={`New ${index + 1}`} fill unoptimized={isRemoteImageSrc(image.url) || image.url.startsWith('data:')} className="object-cover rounded-lg" />
                             <button type="button" onClick={() => handleRemoveNewImage(index)} className="absolute top-2 right-2 z-10 bg-white/90 hover:bg-white rounded-full p-2 shadow-lg transition-colors" aria-label="Remove image">
                               <X className="w-4 h-4 text-foreground" />
                             </button>

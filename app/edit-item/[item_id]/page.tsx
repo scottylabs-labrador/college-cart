@@ -4,6 +4,7 @@ import EditItemClient from './edit-item-client';
 import { s3, BUCKET } from '@/lib/s3';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { extractObjectKey, safePublicImageUrl } from '@/lib/storage-image';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,9 +42,7 @@ export default async function EditItemPage({
 
       let imageUrl = '';
 
-      // Check if it's a Tigris image
-      const isTigrisUrl = storage.url?.includes("tigris.dev");
-      const key = storage.key || (isTigrisUrl ? storage.url?.split(".dev/").pop() : null);
+      const key = extractObjectKey(storage);
 
       if (key) {
         try {
@@ -57,9 +56,8 @@ export default async function EditItemPage({
         }
       }
 
-      // Fallback
-      if (!imageUrl && storage.url) {
-        imageUrl = storage.url;
+      if (!imageUrl) {
+        imageUrl = safePublicImageUrl(storage) ?? '';
       }
 
       if (imageUrl) {

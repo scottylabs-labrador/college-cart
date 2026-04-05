@@ -5,25 +5,10 @@ import { Conversation } from '@/types/chat';
 import ConversationSidebar from '@/components/chat/conversation-sidebar';
 import ConversationView from '@/components/chat/conversation-view';
 import { createClient } from '@supabase/supabase-js';
+import { getLastReadTimestamps, markConversationRead } from '@/lib/chat-read-state';
 
 const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '';
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, key);
-
-const LAST_READ_KEY = 'chat_last_read';
-
-function getLastReadTimestamps(): Record<string, string> {
-  try {
-    return JSON.parse(localStorage.getItem(LAST_READ_KEY) || '{}');
-  } catch {
-    return {};
-  }
-}
-
-function markConversationRead(conversationId: string) {
-  const timestamps = getLastReadTimestamps();
-  timestamps[conversationId] = new Date().toISOString();
-  localStorage.setItem(LAST_READ_KEY, JSON.stringify(timestamps));
-}
 
 type ChatPageClientProps = {
   initialConversations: Conversation[];

@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import MainHeader from "@/components/main-header";
 import Image from "next/image";
 import AnnouncementPopup from "@/components/announcement-popup";
+import { isRemoteImageSrc } from "@/lib/storage-image";
 
 import furnitureImg from "@/app/assets/landing/furniture.png";
 import appliancesImg from "@/app/assets/landing/appliances.png";
@@ -163,7 +164,10 @@ export default function HomeClient({ listings }: { listings: ListingItem[] }) {
                         src={listing.imageUrl}
                         alt={listing.title}
                         fill
-                        unoptimized={listing.imageUrl.startsWith("data:")}
+                        unoptimized={
+                          isRemoteImageSrc(listing.imageUrl) ||
+                          listing.imageUrl.startsWith("data:")
+                        }
                         sizes="(max-width: 768px) 50vw, 25vw"
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
                       />
