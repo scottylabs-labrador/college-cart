@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: 'CollegeCart',
-  description: 'A platform for college students to buy and sell items',
+  description: "CMU's safe and simple marketplace",
 }
 
 export default function RootLayout({
