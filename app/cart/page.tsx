@@ -78,6 +78,7 @@ export default function CollegeCartHome() {
             .from('listing')
             .select('*')
             .in('listing_id', favIds)
+            .in('status', ['active', 'sold'])
             .order("created_at", { ascending: false });
         if (listingError){
             console.error("Error accessing favorites", listingError);

@@ -123,6 +123,7 @@ export default function SellingPage() {
         .from("listing")
         .select("*")
         .eq("seller_id", userId)
+        .in("status", ["active", "sold"])
         .order("created_at", { ascending: false });
 
       if (error) {

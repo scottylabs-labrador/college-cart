@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     const priceValue = formData.get('price_cents') as string
     const condition = formData.get('condition') as string
     const quantityValue = formData.get('quantity') as string
-    const status = formData.get('status') as string
+    const statusRaw = (formData.get('status') as string) || 'active'
     const location = formData.get('location') as string | null
     const imageEntries = formData.getAll('images')
     const category = formData.get('category') as string
@@ -21,37 +21,55 @@ export async function POST(request: Request) {
       (entry): entry is File => entry instanceof File && entry.size > 0
     )
 
-    // Validation
+    // Only 'active' and 'draft' are valid entry points for a new listing.
+    // 'sold' and 'archived' are state transitions applied to existing rows.
+    const status = statusRaw === 'draft' ? 'draft' : 'active'
+    const isDraft = status === 'draft'
+
+    // Validation (drafts have far looser requirements so users can save
+    // partial work and come back later from the Parking Lot).
     if (!title || title.trim() === '') {
       return NextResponse.json({ success: false, error: 'Title is required' }, { status: 400 })
-    }
-    if (!description || description.trim() === '') {
-      return NextResponse.json({ success: false, error: 'Description is required' }, { status: 400 })
     }
     if (!seller_id || seller_id.trim() === '') {
       return NextResponse.json({ success: false, error: 'User ID is required. Please make sure you are logged in.' }, { status: 400 })
     }
-    if (!condition || condition.trim() === '') {
-      return NextResponse.json({ success: false, error: 'Condition is required' }, { status: 400 })
+    if (!isDraft) {
+      if (!description || description.trim() === '') {
+        return NextResponse.json({ success: false, error: 'Description is required' }, { status: 400 })
+      }
+      if (!condition || condition.trim() === '') {
+        return NextResponse.json({ success: false, error: 'Condition is required' }, { status: 400 })
+      }
     }
-    const category_id = parseInt(category);
+    const category_id = Number.isNaN(parseInt(category)) ? null : parseInt(category)
     const parsedPrice = priceValue ? parseInt(priceValue, 10) : null
-    const price_cents = Number.isNaN(parsedPrice) ? null : parsedPrice
-    
-    if (!price_cents || price_cents <= 0) {
+    const price_cents = Number.isNaN(parsedPrice as number) ? null : parsedPrice
+
+    if (!isDraft && (!price_cents || price_cents <= 0)) {
       return NextResponse.json({ success: false, error: 'Price must be greater than 0' }, { status: 400 })
     }
 
     const parsedQuantity = quantityValue ? parseInt(quantityValue, 10) : null
-    const quantity = Number.isNaN(parsedQuantity) ? null : parsedQuantity
-    
-    if (!quantity || quantity <= 0) {
+    const quantity = Number.isNaN(parsedQuantity as number) ? null : parsedQuantity
+
+    if (!isDraft && (!quantity || quantity <= 0)) {
       return NextResponse.json({ success: false, error: 'Quantity must be greater than 0' }, { status: 400 })
     }
 
     const { data: listingData, error: listingError } = await supabase
       .from('listing')
-      .insert([{ title, seller_id, category_id, description, price_cents, condition, quantity, status, location }])
+      .insert([{
+        title,
+        seller_id,
+        category_id,
+        description: description || null,
+        price_cents: price_cents ?? 0,
+        condition: condition || null,
+        quantity: quantity ?? 1,
+        status,
+        location,
+      }])
       .select('listing_id')
       .single()
 
