@@ -143,10 +143,20 @@ export default function MainHeader() {
             )}
             <button
               onClick={handleChatClick}
-              className="hidden md:flex"
+              className="hidden md:inline-flex relative"
               title="Messages"
+              aria-label={
+                unreadChatsCount > 0
+                  ? `Messages, ${unreadChatsCount > 9 ? 'more than 9' : unreadChatsCount} unread chats`
+                  : 'Messages'
+              }
             >
               <MessageCircle className="h-6 w-6" />
+              {unreadChatsCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-[#2f167a]">
+                  {unreadChatsCount > 9 ? '9+' : unreadChatsCount}
+                </span>
+              )}
             </button>
             {isSignedIn && (
               <>
@@ -156,19 +166,10 @@ export default function MainHeader() {
                 <DropdownMenu>
                   <DropdownMenuTrigger
                     className="hidden md:inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-medium text-white hover:bg-white/10 outline-none focus-visible:ring-2 focus-visible:ring-white/50"
-                    aria-label={
-                      unreadChatsCount > 0
-                        ? `Account menu, ${unreadChatsCount > 9 ? 'more than 9' : unreadChatsCount} unread chats`
-                        : 'Account menu'
-                    }
+                    aria-label="Account menu"
                   >
-                    <span className="relative inline-flex items-center gap-1">
+                    <span className="inline-flex items-center gap-1">
                       {userLabel}
-                      {unreadChatsCount > 0 && (
-                        <span className="ml-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-[#2f167a]">
-                          {unreadChatsCount > 9 ? '9+' : unreadChatsCount}
-                        </span>
-                      )}
                       <ChevronDown className="h-4 w-4 opacity-90" />
                     </span>
                   </DropdownMenuTrigger>
@@ -236,8 +237,20 @@ export default function MainHeader() {
           <button
             onClick={(e) => { handleChatClick(e); setMobileMenuOpen(false); }}
             className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-white/10 transition-colors"
+            aria-label={
+              unreadChatsCount > 0
+                ? `Chat, ${unreadChatsCount > 9 ? 'more than 9' : unreadChatsCount} unread chats`
+                : undefined
+            }
           >
-            <MessageCircle className="h-5 w-5" />
+            <span className="relative inline-flex">
+              <MessageCircle className="h-5 w-5" />
+              {unreadChatsCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-[#2f167a]">
+                  {unreadChatsCount > 9 ? '9+' : unreadChatsCount}
+                </span>
+              )}
+            </span>
             Chat
           </button>
           <Link
@@ -262,21 +275,9 @@ export default function MainHeader() {
                 href="/account"
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-white/10 transition-colors"
-                aria-label={
-                  unreadChatsCount > 0
-                    ? `Manage account, ${unreadChatsCount > 9 ? 'more than 9' : unreadChatsCount} unread chats`
-                    : undefined
-                }
               >
                 <UserRound className="h-5 w-5" />
-                <span className="flex flex-1 items-center justify-between gap-2 min-w-0">
-                  <span>Manage account</span>
-                  {unreadChatsCount > 0 && (
-                    <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-[#2f167a]">
-                      {unreadChatsCount > 9 ? '9+' : unreadChatsCount}
-                    </span>
-                  )}
-                </span>
+                Manage account
               </Link>
               <button
                 type="button"
