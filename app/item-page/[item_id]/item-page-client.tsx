@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, MessageCircle, Pencil, ShoppingCart, Trash2, X, ZoomIn, ZoomOut } from 'lucide-react';
+import { Archive, ChevronLeft, ChevronRight, MessageCircle, Pencil, ShoppingCart, Trash2, X, ZoomIn, ZoomOut } from 'lucide-react';
 import { useAuth } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js'
@@ -360,6 +360,43 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
       }
   };
 
+  const handleArchive = async () => {
+    if (!isSignedIn || !userId) {
+      alert("You must be logged in to archive a listing!");
+      return;
+    }
+    if (userId !== listing.seller_id) {
+      alert("You can only archive your own listing!");
+      return;
+    }
+    const confirmed = window.confirm(
+      "Move this listing to the Parking Lot? It will no longer be visible to other users, but you can repost it later.",
+    );
+    if (!confirmed) return;
+
+    try {
+      const formData = new FormData();
+      formData.append("listing_id", listing.id);
+      formData.append("user_id", userId);
+      formData.append("action", "archive");
+
+      const response = await fetch(`/parking-lot/action`, {
+        method: "POST",
+        body: formData,
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        alert(`Error: ${result.error || "Failed to archive listing."}`);
+        return;
+      }
+      posthog.capture('listing_archived', { listing_id: listing.id });
+      router.push('/parking-lot');
+    } catch (error) {
+      console.error("Network error archiving listing:", error);
+      alert("Network error: Failed to archive listing.");
+    }
+  };
+
   const handleDelete = async () => {
     if (!isSignedIn || !userId) {
       alert("You must be logged in to delete a listing!");
@@ -519,12 +556,12 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
               </p>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-3 mb-6">
+              <div className="mb-6">
                 {isOwner ? (
-                  <>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <Button
                       size="lg"
-                      className="flex-1 border-0 text-white"
+                      className="border-0 text-white"
                       style={{
                         background: 'linear-gradient(to right, #4a2db8, #a78bfa)',
                       }}
@@ -539,9 +576,18 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
                       <Pencil className="w-5 h-5 mr-2" />
                       Edit Listing
                     </Button>
-                    <Button 
-                      size="lg" 
-                      className="flex-1 border-0 text-white"
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="border-[#4a2db8] text-[#4a2db8] hover:bg-[#4a2db8]/5"
+                      onClick={handleArchive}
+                    >
+                      <Archive className="w-5 h-5 mr-2" />
+                      Archive
+                    </Button>
+                    <Button
+                      size="lg"
+                      className="border-0 text-white"
                       style={{
                         background: 'linear-gradient(to right, #fca5a5, #f87171)',
                       }}
@@ -554,10 +600,11 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
                       onClick={handleDelete}
                     >
                       <Trash2 className="w-5 h-5 mr-2" />
-                      Delete Listing
+                      Delete
                     </Button>
-                  </>
+                  </div>
                 ) : (
+                  <div className="flex items-center gap-3">
                   <>
                     <Button 
                       size="lg" 
@@ -595,6 +642,7 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
                       <MessageCircle className="w-6 h-6" />
                     </Button>
                   </>
+                  </div>
                 )}
               </div>
             </div>

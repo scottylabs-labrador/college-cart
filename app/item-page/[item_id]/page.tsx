@@ -77,6 +77,12 @@ export default async function ItemPage({
     notFound();
   }
 
+  // Drafts and archived listings are private to their seller; hide them
+  // from the public item page. Sellers manage these from /parking-lot.
+  if (listing.status === 'draft' || listing.status === 'archived') {
+    notFound();
+  }
+
   // Fetch listing images
   const { data: images, error: imagesError } = await supabase
     .from('listing_image')

@@ -10,6 +10,7 @@ import {
   MessageCircle,
   ChevronDown,
   Package,
+  ParkingSquare,
   UserRound,
   LogOut,
 } from 'lucide-react';
@@ -202,6 +203,12 @@ export default function MainHeader() {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
+                      <Link href="/parking-lot" className="cursor-pointer">
+                        <ParkingSquare className="h-4 w-4" />
+                        Parking Lot
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
                       <Link href="/account" className="cursor-pointer">
                         <UserRound className="h-4 w-4" />
                         Manage account
@@ -270,6 +277,14 @@ export default function MainHeader() {
               >
                 <Package className="h-5 w-5" />
                 On Sale
+              </Link>
+              <Link
+                href="/parking-lot"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-white/10 transition-colors"
+              >
+                <ParkingSquare className="h-5 w-5" />
+                Parking Lot
               </Link>
               <Link
                 href="/account"

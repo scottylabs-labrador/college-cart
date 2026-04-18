@@ -33,6 +33,7 @@ export default function PostItemPage() {
   const [description, setDescription] = useState('');
   const [imagePreviews, setImagePreviews] = useState<Array<{ url: string; file: File }>>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMode, setSubmitMode] = useState<'active' | 'draft'>('active');
   const hasTrackedStart = useRef(false);
 
   // Track post item started event (signals intent to sell - top of seller funnel)
@@ -93,37 +94,44 @@ export default function PostItemPage() {
     e.preventDefault();
     if (isSubmitting) return;
     setIsSubmitting(true);
-    
-    // Frontend validation
+
+    const isDraft = submitMode === 'draft';
+
+    // Title is required for every submission so the user can find the
+    // item again in their Parking Lot.
     if (!title.trim()) {
       alert("Please enter a title for your item.");
       setIsSubmitting(false);
       return;
     }
-    if (!description.trim()) {
-      alert("Please enter a description for your item.");
-      setIsSubmitting(false);
-      return;
-    }
-    if (!price || parseFloat(price) <= 0) {
-      alert("Please enter a valid price greater than 0.");
-      setIsSubmitting(false);
-      return;
-    }
-    if (!quantity || parseInt(quantity) <= 0) {
-      alert("Please enter a valid quantity greater than 0.");
-      setIsSubmitting(false);
-      return;
-    }
-    if (!condition) {
-      alert("Please select a condition for your item.");
-      setIsSubmitting(false);
-      return;
-    }
-    if (imagePreviews.length <= 1) {
-      alert("Please upload at least two images for your item.");
-      setIsSubmitting(false);
-      return;
+
+    // All other fields are only required when actually publishing.
+    if (!isDraft) {
+      if (!description.trim()) {
+        alert("Please enter a description for your item.");
+        setIsSubmitting(false);
+        return;
+      }
+      if (!price || parseFloat(price) <= 0) {
+        alert("Please enter a valid price greater than 0.");
+        setIsSubmitting(false);
+        return;
+      }
+      if (!quantity || parseInt(quantity) <= 0) {
+        alert("Please enter a valid quantity greater than 0.");
+        setIsSubmitting(false);
+        return;
+      }
+      if (!condition) {
+        alert("Please select a condition for your item.");
+        setIsSubmitting(false);
+        return;
+      }
+      if (imagePreviews.length <= 1) {
+        alert("Please upload at least two images for your item.");
+        setIsSubmitting(false);
+        return;
+      }
     }
     if (!userId) {
       alert("You must be logged in to post an item.");
@@ -131,13 +139,20 @@ export default function PostItemPage() {
       return;
     }
 
+    const priceCentsValue = price && parseFloat(price) > 0
+      ? Math.round(parseFloat(price) * 100).toString()
+      : '0';
+    const quantityValue = quantity && parseInt(quantity) > 0
+      ? Math.round(parseInt(quantity)).toString()
+      : '1';
+
     const formData = new FormData();
     formData.append("title", title);
     formData.append("description", description);
-    formData.append("price_cents", Math.round(parseFloat(price) * 100).toString());
+    formData.append("price_cents", priceCentsValue);
     formData.append("condition", condition);
-    formData.append("quantity", Math.round(parseInt(quantity)).toString());
-    formData.append("status", "active"); 
+    formData.append("quantity", quantityValue);
+    formData.append("status", isDraft ? "draft" : "active");
     formData.append("user_id", userId || "");
     formData.append("category", (category).toString());
     
@@ -206,19 +221,23 @@ export default function PostItemPage() {
 
       if (result.success && result.listing_id) {
         // Track successful listing creation
-        posthog.capture('listing_created', {
+        posthog.capture(isDraft ? 'listing_drafted' : 'listing_created', {
           listing_id: result.listing_id,
           category: category,
           condition: condition,
-          price_cents: Math.round(parseFloat(price) * 100),
-          quantity: parseInt(quantity),
+          price_cents: Math.round(parseFloat(price || '0') * 100),
+          quantity: parseInt(quantity || '0'),
           image_count: imagePreviews.length,
           title_length: title.length,
           description_length: description.length,
         });
 
-        // Redirect to the item listing page
-        router.push(`/item-page/${result.listing_id}`);
+        // Drafts land in the Parking Lot; published listings go live.
+        if (isDraft) {
+          router.push(`/parking-lot`);
+        } else {
+          router.push(`/item-page/${result.listing_id}`);
+        }
       } else {
         const errorMessage = result.error || "Listing added but failed to get item ID. Please try again.";
         alert(`Error: ${errorMessage}`);
@@ -460,12 +479,13 @@ export default function PostItemPage() {
                     />
                   </div>
 
-                  {/* Submit Button */}
-                  <div className="pt-4">
+                  {/* Submit Buttons */}
+                  <div className="pt-4 space-y-2">
                     <Button
                       type="submit"
                       size="lg"
                       disabled={isSubmitting}
+                      onClick={() => setSubmitMode('active')}
                       className="w-full border-0 text-white"
                       style={{
                         background: isSubmitting
@@ -485,8 +505,23 @@ export default function PostItemPage() {
                         }
                       }}
                     >
-                      {isSubmitting ? 'Listing...' : 'List Item'}
+                      {isSubmitting && submitMode === 'active' ? 'Listing...' : 'List Item'}
                     </Button>
+                    <Button
+                      type="submit"
+                      size="lg"
+                      variant="outline"
+                      disabled={isSubmitting}
+                      onClick={() => setSubmitMode('draft')}
+                      className="w-full border-[#4a2db8] text-[#4a2db8] hover:bg-[#4a2db8]/5"
+                    >
+                      {isSubmitting && submitMode === 'draft'
+                        ? 'Saving...'
+                        : 'Save to Parking Lot'}
+                    </Button>
+                    <p className="text-xs text-muted-foreground text-center">
+                      Drafts stay private in your Parking Lot until you publish them.
+                    </p>
                   </div>
                 </CardContent>
               </Card>
