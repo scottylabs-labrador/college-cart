@@ -142,6 +142,38 @@ export default function HomeClient({ listings }: { listings: ListingItem[] }) {
           ))}
         </section>
 
+        <div
+          className="rounded-2xl py-3 overflow-hidden"
+          style={{
+            background: "linear-gradient(270deg, #6d28d9, #8b5cf6, #a78bfa, #7c3aed, #6d28d9)",
+            backgroundSize: "300% 300%",
+            animation: "bannerGradient 6s ease infinite",
+          }}
+        >
+          <style>{`
+            @keyframes bannerGradient {
+              0% { background-position: 0% 50%; }
+              50% { background-position: 100% 50%; }
+              100% { background-position: 0% 50%; }
+            }
+            @keyframes marquee {
+              0% { transform: translateX(0); }
+              100% { transform: translateX(-50%); }
+            }
+          `}</style>
+          <div
+            className="flex whitespace-nowrap"
+            style={{ animation: "marquee 18s linear infinite" }}
+          >
+            <span className="text-white font-medium px-6">
+              ✦ 510+ weekly active users &nbsp;&nbsp;·&nbsp;&nbsp; College Cart &nbsp;&nbsp;·&nbsp;&nbsp; Buy &amp; Sell on Campus &nbsp;&nbsp;·&nbsp;&nbsp; New listings every day &nbsp;&nbsp;·&nbsp;&nbsp; Join your campus marketplace &nbsp;&nbsp;
+            </span>
+            <span className="text-white font-medium px-6" aria-hidden="true">
+              ✦ 510+ weekly active users &nbsp;&nbsp;·&nbsp;&nbsp; College Cart &nbsp;&nbsp;·&nbsp;&nbsp; Buy &amp; Sell on Campus &nbsp;&nbsp;·&nbsp;&nbsp; New listings every day &nbsp;&nbsp;·&nbsp;&nbsp; Join your campus marketplace &nbsp;&nbsp;
+            </span>
+          </div>
+        </div>
+
         <div>
           <p className="text-xl font-medium pt-4 mb-6">See what&apos;s selling</p>
           {listings.length === 0 ? (
