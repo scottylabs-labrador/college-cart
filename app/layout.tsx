@@ -1,15 +1,11 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Josefin_Sans } from 'next/font/google'
 import './globals.css'
 import PostHogIdentify from '@/components/posthog-identify'
+import SiteFooter from '@/components/site-footer'
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-})
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+const josefin = Josefin_Sans({
+  variable: '--font-josefin',
   subsets: ['latin'],
 })
 
@@ -24,10 +20,11 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+    <html lang="en" className={josefin.variable}>
+      <body className="flex min-h-screen flex-col antialiased">
         <PostHogIdentify />
         {children}
+        <SiteFooter />
       </body>
     </html>
   )

@@ -619,7 +619,7 @@ export default function ChatModal({ isOpen, onClose, conversationId, listingTitl
                   placeholder="Type your message..."
                   rows={1}
                   disabled={loading}
-                  className="flex w-full rounded-md border border-input bg-background px-3 py-2 pr-12 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none overflow-hidden max-h-32"
+                  className="flex w-full rounded-md border border-input bg-background px-3 py-2 pr-12 text-sm placeholder:text-muted-foreground outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 resize-none overflow-hidden max-h-32"
                   onInput={(e) => {
                     const target = e.target as HTMLTextAreaElement;
                     target.style.height = 'auto';
@@ -630,10 +630,7 @@ export default function ChatModal({ isOpen, onClose, conversationId, listingTitl
                   type="submit"
                   disabled={loading || !text.trim()}
                   size="icon"
-                  className="absolute right-1 bottom-1.5 h-8 w-8 border-0 text-white"
-                  style={{
-                    background: 'linear-gradient(to right, #4a2db8, #a78bfa)',
-                  }}
+                  className="absolute right-1 bottom-1.5 h-8 w-8"
                 >
                   <Send className="h-4 w-4" />
                 </Button>

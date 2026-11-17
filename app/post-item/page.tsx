@@ -271,18 +271,18 @@ export default function PostItemPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="flex-1 bg-white">
       {/* Header Navigation */}
       <MainHeader />
 
       {/* Main Content */}
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 py-10">
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Left Column - Image Upload Section */}
             <div className="w-full">
               <Card className="overflow-hidden">
-                <CardContent className="p-8 relative">
+                <CardContent className="p-6 relative">
                   {imagePreviews.length > 0 ? (
                     <div className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
@@ -475,7 +475,7 @@ export default function PostItemPage() {
                       onChange={(e) => setDescription(e.target.value)}
                       placeholder="Describe your item..."
                       rows={6}
-                      className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm resize-none"
+                      className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-base placeholder:text-muted-foreground outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm resize-none"
                     />
                   </div>
 
@@ -486,24 +486,7 @@ export default function PostItemPage() {
                       size="lg"
                       disabled={isSubmitting}
                       onClick={() => setSubmitMode('active')}
-                      className="w-full border-0 text-white"
-                      style={{
-                        background: isSubmitting
-                          ? '#8b7bc8'
-                          : 'linear-gradient(to right, #4a2db8, #a78bfa)',
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isSubmitting) {
-                          e.currentTarget.style.background =
-                            'linear-gradient(to right, #3d2599, #9d7ff0)';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isSubmitting) {
-                          e.currentTarget.style.background =
-                            'linear-gradient(to right, #4a2db8, #a78bfa)';
-                        }
-                      }}
+                      className="w-full"
                     >
                       {isSubmitting && submitMode === 'active' ? 'Listing...' : 'List Item'}
                     </Button>
@@ -513,7 +496,7 @@ export default function PostItemPage() {
                       variant="outline"
                       disabled={isSubmitting}
                       onClick={() => setSubmitMode('draft')}
-                      className="w-full border-[#4a2db8] text-[#4a2db8] hover:bg-[#4a2db8]/5"
+                      className="w-full border-primary text-primary hover:bg-primary/5"
                     >
                       {isSubmitting && submitMode === 'draft'
                         ? 'Saving...'

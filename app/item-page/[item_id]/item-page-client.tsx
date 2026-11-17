@@ -452,12 +452,12 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
   const currentImage = listing.imageUrls[selectedImageIndex] || '/scotty-tote-dummy.jpg';
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="flex-1 bg-white">
       {/* Header Navigation */}
       <MainHeader />
 
       {/* Main Content */}
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 py-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Item Image */}
           <div className="w-full">
@@ -550,7 +550,7 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
           {/* Item Details */}
           <div className="flex flex-col gap-6">
             <div>
-              <h1 className="text-4xl font-bold mb-4">{listing.title}</h1>
+              <h1 className="text-4xl font-semibold mb-4">{listing.title}</h1>
               <p className="text-3xl font-bold text-primary mb-6">
                 {listing.priceFormatted}
               </p>
@@ -561,16 +561,7 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <Button
                       size="lg"
-                      className="border-0 text-white"
-                      style={{
-                        background: 'linear-gradient(to right, #4a2db8, #a78bfa)',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'linear-gradient(to right, #3d2599, #9d7ff0)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'linear-gradient(to right, #4a2db8, #a78bfa)';
-                      }}
+                     
                       onClick={() => router.push(`/edit-item/${listing.id}`)}
                     >
                       <Pencil className="w-5 h-5 mr-2" />
@@ -579,7 +570,7 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
                     <Button
                       size="lg"
                       variant="outline"
-                      className="border-[#4a2db8] text-[#4a2db8] hover:bg-[#4a2db8]/5"
+                      className="border-primary text-primary hover:bg-primary/5"
                       onClick={handleArchive}
                     >
                       <Archive className="w-5 h-5 mr-2" />
@@ -587,16 +578,8 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
                     </Button>
                     <Button
                       size="lg"
-                      className="border-0 text-white"
-                      style={{
-                        background: 'linear-gradient(to right, #fca5a5, #f87171)',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'linear-gradient(to right, #f87171, #ef4444)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'linear-gradient(to right, #fca5a5, #f87171)';
-                      }}
+                     
+                      variant="destructive"
                       onClick={handleDelete}
                     >
                       <Trash2 className="w-5 h-5 mr-2" />
@@ -608,16 +591,7 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
                   <>
                     <Button 
                       size="lg" 
-                      className="flex-1 border-0 text-white"
-                      style={{
-                        background: 'linear-gradient(to right, #4a2db8, #a78bfa)',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'linear-gradient(to right, #3d2599, #9d7ff0)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'linear-gradient(to right, #4a2db8, #a78bfa)';
-                      }}
+                      className="flex-1"
                       onClick = {handleOffer}
                     >
                       Make Offer
@@ -836,7 +810,7 @@ export default function ItemPageClient({ listing }: { listing: ListingData }) {
               </p>
               <div className="flex flex-col gap-2">
                 <Button 
-                  className="w-full bg-[#4a2db8] hover:bg-[#3d2599] text-white rounded-xl h-11"
+                  className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl h-11"
                   onClick={async () => {
                     setAuthError(null);
                     try {

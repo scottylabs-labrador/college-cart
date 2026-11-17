@@ -181,20 +181,20 @@ export default function ParkingLotPage() {
   const archived = listings.filter((l) => l.status === 'archived');
 
   return (
-    <div className="min-h-screen bg-white text-slate-900">
+    <div className="flex-1 bg-white text-slate-900">
       <MainHeader />
 
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 py-8 space-y-10">
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 py-10 space-y-10">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-3xl font-bold">Parking Lot</h1>
+            <h1 className="text-3xl font-semibold">Parking Lot</h1>
             <p className="text-sm text-slate-600 mt-1 max-w-xl">
               Your drafts and archived listings live here. Drafts aren&apos;t public until you
               publish them; archived listings are hidden from other users but can be reposted.
             </p>
           </div>
           <Link href="/post-item">
-            <Button className="bg-[#2f167a] hover:bg-[#241057] text-white">
+            <Button className="bg-primary hover:bg-primary/90 text-white">
               <FileEdit className="w-4 h-4 mr-2" />
               New Draft
             </Button>
@@ -203,7 +203,7 @@ export default function ParkingLotPage() {
 
         {isLoading ? (
           <div className="flex items-center gap-3 text-slate-700 py-8">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-300 border-t-[#2f167a]" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-300 border-t-primary" />
             <p className="text-sm">Loading your Parking Lot...</p>
           </div>
         ) : (
@@ -216,7 +216,7 @@ export default function ParkingLotPage() {
                 <>
                   <Button
                     size="sm"
-                    className="flex-1 bg-[#4a2db8] hover:bg-[#3d2599] text-white"
+                    className="flex-1 bg-primary hover:bg-primary/90 text-white"
                     disabled={pendingId === listing.id}
                     onClick={() =>
                       runAction(
@@ -257,7 +257,7 @@ export default function ParkingLotPage() {
                 <>
                   <Button
                     size="sm"
-                    className="flex-1 bg-[#4a2db8] hover:bg-[#3d2599] text-white"
+                    className="flex-1 bg-primary hover:bg-primary/90 text-white"
                     disabled={pendingId === listing.id}
                     onClick={() =>
                       runAction(
@@ -308,9 +308,9 @@ function Section({ title, items, emptyMessage, renderActions }: SectionProps) {
     <section>
       <div className="flex items-center gap-2 mb-4">
         {title === 'Drafts' ? (
-          <FileEdit className="w-5 h-5 text-[#2f167a]" />
+          <FileEdit className="w-5 h-5 text-primary" />
         ) : (
-          <Archive className="w-5 h-5 text-[#2f167a]" />
+          <Archive className="w-5 h-5 text-primary" />
         )}
         <h2 className="text-xl font-semibold">{title}</h2>
         <span className="text-sm text-slate-500">({items.length})</span>
@@ -337,7 +337,7 @@ function Section({ title, items, emptyMessage, renderActions }: SectionProps) {
                   sizes="(max-width: 768px) 100vw, 33vw"
                   className="object-cover"
                 />
-                <span className="absolute top-2 left-2 bg-white/90 text-[#2f167a] text-[10px] font-semibold px-2 py-1 rounded-full uppercase tracking-wide">
+                <span className="absolute top-2 left-2 bg-white/90 text-primary text-[10px] font-semibold px-2 py-1 rounded-full uppercase tracking-wide">
                   {listing.status}
                 </span>
               </div>

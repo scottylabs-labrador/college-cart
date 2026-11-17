@@ -198,10 +198,10 @@ export default function EditItemClient({ listing }: { listing: ListingProps }) {
 
   if (userId !== listing.seller_id) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="flex-1 bg-white">
         <MainHeader />
         <main className="mx-auto max-w-7xl px-4 py-8 text-center">
-          <h1 className="text-2xl font-bold text-red-600">Unauthorized</h1>
+          <h1 className="text-2xl font-semibold text-red-600">Unauthorized</h1>
           <p>You do not have permission to edit this listing.</p>
         </main>
       </div>
@@ -209,15 +209,15 @@ export default function EditItemClient({ listing }: { listing: ListingProps }) {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="flex-1 bg-white">
       <MainHeader />
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
-        <h1 className="text-3xl font-bold mb-8">Edit Listing</h1>
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 py-10">
+        <h1 className="text-3xl font-semibold mb-8">Edit Listing</h1>
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="w-full">
               <Card className="overflow-hidden">
-                <CardContent className="p-8 relative">
+                <CardContent className="p-6 relative">
                   {(retainedImages.length > 0 || newImagePreviews.length > 0) ? (
                     <div className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
@@ -318,11 +318,11 @@ export default function EditItemClient({ listing }: { listing: ListingProps }) {
 
                   <div className="space-y-2">
                     <label htmlFor="description" className="text-sm font-medium text-foreground">Description</label>
-                    <textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe your item..." rows={6} className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm resize-none" />
+                    <textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe your item..." rows={6} className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-base placeholder:text-muted-foreground outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm resize-none" />
                   </div>
 
                   <div className="pt-4">
-                    <Button type="submit" size="lg" disabled={isSubmitting} className="w-full border-0 text-white" style={{ background: isSubmitting ? '#8b7bc8' : 'linear-gradient(to right, #4a2db8, #a78bfa)' }} onMouseEnter={(e) => { if (!isSubmitting) { e.currentTarget.style.background = 'linear-gradient(to right, #3d2599, #9d7ff0)'; } }} onMouseLeave={(e) => { if (!isSubmitting) { e.currentTarget.style.background = 'linear-gradient(to right, #4a2db8, #a78bfa)'; } }}>
+                    <Button type="submit" size="lg" disabled={isSubmitting} className="w-full">
                       {isSubmitting ? 'Saving...' : 'Save Changes'}
                     </Button>
                   </div>

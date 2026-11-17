@@ -1,0 +1,118 @@
+/*
+  Accent motion for the home page category cards.
+  Each card has one accent object that moves while the card is hovered,
+  focused, or (on touch screens) briefly after it scrolls into view.
+  At rest the cards match the Figma design exactly.
+*/
+
+.accent {
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
+}
+
+/* Dorm Essentials: the alarm clock rings. */
+.tile:is(:hover, :focus-visible, [data-active="true"]) .clock {
+  animation: ring 0.9s ease-in-out;
+}
+@keyframes ring {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  10%,
+  30%,
+  50%,
+  70% {
+    transform: rotate(-7deg);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: rotate(7deg);
+  }
+}
+
+/* Electronics: the two controllers lift apart as if being played. */
+.tile:is(:hover, :focus-visible, [data-active="true"]) .padRed {
+  transform: translate(-9%, -9%) rotate(-14deg);
+}
+.tile:is(:hover, :focus-visible, [data-active="true"]) .padBlue {
+  transform: translate(7%, -5%) rotate(12deg);
+}
+
+/* Books & School: the apple hops. */
+.tile:is(:hover, :focus-visible, [data-active="true"]) .apple {
+  transform: translateY(-8%) rotate(-8deg);
+}
+
+/* Clothing: the sneaker takes a step. */
+.tile:is(:hover, :focus-visible, [data-active="true"]) .sneaker {
+  transform: translate(4%, -14%) rotate(-10deg);
+}
+
+/* Commute: the bike rolls forward. */
+.tile:is(:hover, :focus-visible, [data-active="true"]) .bike {
+  transform: translateX(3%);
+}
+
+/* Furniture: the lamp nods and switches on. */
+.lamp {
+  transform-origin: 62% 62%;
+}
+.tile:is(:hover, :focus-visible, [data-active="true"]) .lamp {
+  transform: rotate(-3deg);
+}
+.glow {
+  opacity: 0;
+  transition: opacity 0.45s ease-out;
+}
+.tile:is(:hover, :focus-visible, [data-active="true"]) .glow {
+  opacity: 1;
+}
+
+/* Free & Fun: the disco ball swings and light glints off it. */
+.disco {
+  transform-origin: 50% 8%;
+}
+.tile:is(:hover, :focus-visible, [data-active="true"]) .disco {
+  transform: rotate(5deg);
+}
+.glints {
+  opacity: 0;
+  transition: opacity 0.5s ease-out;
+}
+.tile:is(:hover, :focus-visible, [data-active="true"]) .glints {
+  opacity: 1;
+}
+.glint {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.tile:is(:hover, :focus-visible, [data-active="true"]) .glint {
+  animation: twinkle 1.9s ease-in-out infinite;
+}
+@keyframes twinkle {
+  0%,
+  100% {
+    transform: scale(0.7) rotate(0deg);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.12) rotate(14deg);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .accent {
+    transition: none;
+  }
+  .tile:is(:hover, :focus-visible, [data-active="true"]) .accent {
+    transform: none;
+    animation: none;
+  }
+  .tile:is(:hover, :focus-visible, [data-active="true"]) .glint {
+    animation: none;
+  }
+}

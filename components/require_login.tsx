@@ -13,13 +13,13 @@ export default function RequireLogin() {
 
     return (
       <main className="min-h-[60vh] flex items-center justify-center px-4">
-        <div className="max-w-xl w-full bg-white/80 dark:bg-slate-900/70 backdrop-blur-sm border border-gray-200 dark:border-slate-700 rounded-lg p-8 text-center">
-          <h2 className="text-xl font-semibold mb-2">Sign in to use this feature</h2>
+        <div className="max-w-xl w-full bg-white/80 dark:bg-slate-900/70 backdrop-blur-sm border border-gray-200 dark:border-slate-700 rounded-2xl p-8 text-center">
+          <h2 className="mb-4 text-2xl font-semibold">Sign in to use this feature</h2>
           <button
             onClick={() => void handleSignIn()}
-            className="bg-[#6c47ff] text-white rounded-full font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
+            className="inline-flex h-10 items-center rounded-lg bg-primary px-6 text-base font-medium text-white transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
-            Sign In
+            Sign in
           </button>
         </div>
       </main>
