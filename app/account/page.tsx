@@ -12,7 +12,7 @@ export default function AccountPage() {
 
   if (!isLoaded || !userId) {
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-900">
+      <div className="flex-1 bg-white text-slate-900">
         <MainHeader />
         <RequireLogin />
       </div>
@@ -22,10 +22,10 @@ export default function AccountPage() {
   const displayName = user?.name || user?.email?.split('@')[0] || 'Account';
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="flex-1 bg-white text-slate-900">
       <MainHeader />
-      <main className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
-        <h1 className="text-2xl font-bold text-slate-900 mb-6">Manage account</h1>
+      <main className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
+        <h1 className="text-3xl font-semibold text-slate-900 mb-6">Manage account</h1>
 
         <Card className="p-6 mb-6 border border-slate-200 shadow-sm">
           <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-4">
@@ -47,7 +47,7 @@ export default function AccountPage() {
 
         <Card className="p-6 border border-slate-200 shadow-sm">
           <div className="flex items-start gap-3">
-            <div className="rounded-full bg-[#2f167a]/10 p-2 text-[#2f167a]">
+            <div className="rounded-full bg-primary/10 p-2 text-primary">
               <Bell className="h-5 w-5" />
             </div>
             <div>

@@ -1,13 +1,9 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { Clock } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { ListingCard, LISTING_GRID } from "@/components/listing-card";
 import MainHeader from "@/components/main-header";
 import posthog from "posthog-js";
-import { isRemoteImageSrc } from "@/lib/storage-image";
 
 type ListingItem = {
   id: string;
@@ -43,66 +39,23 @@ export default function CategoryClient({ listings, name }: { listings: ListingIt
   };
 
   return (
-    <div className="min-h-screen bg-white text-slate-900">
-      {/* Header */}
+    <div className="flex-1 bg-white text-slate-900">
       <MainHeader />
 
-      {/* Main Content */}
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 py-8 space-y-10">
-
-        {/* See what's selling section */}
-        <div>
-          <p className="text-xl font-medium pt-4 mb-6">{name}</p>
-          {listings.length === 0 ? (
-            <div className="text-center py-12 text-slate-600">
-              <p>No items in this category yet. Be the first one to upload!</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {listings.map((listing) => (
-                <Link
-                  key={listing.id}
-                  href={listing.href}
-                  className="group block transition-transform duration-200 hover:scale-[1.02]"
-                  onClick={() => handleListingClick(listing)}
-                >
-                  <Card className="rounded-xl border-0 shadow-sm overflow-hidden bg-white">
-                    <div className="aspect-square relative bg-muted overflow-hidden">
-                      <Image
-                        src={listing.imageUrl}
-                        alt={listing.title}
-                        fill
-                        unoptimized={
-                          isRemoteImageSrc(listing.imageUrl) ||
-                          listing.imageUrl.startsWith("data:")
-                        }
-                        sizes="(max-width: 768px) 50vw, 25vw"
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold text-slate-900 line-clamp-2 mb-2 text-sm">
-                        {listing.title}
-                      </h3>
-                      <p className="text-lg font-bold text-[#2f167a]">
-                        {listing.priceFormatted}
-                      </p>
-                    </div>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
+      <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+        <h1 className="mb-6 text-3xl font-semibold">{name}</h1>
+        {listings.length === 0 ? (
+          <p className="py-12 text-center text-slate-600">
+            No items in this category yet. Be the first one to upload!
+          </p>
+        ) : (
+          <div className={LISTING_GRID}>
+            {listings.map((listing) => (
+              <ListingCard key={listing.id} listing={listing} onClick={() => handleListingClick(listing)} />
+            ))}
+          </div>
+        )}
       </main>
-
-      {/* Footer */}
-      <footer className="border-t mt-12">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 text-sm text-slate-600 flex items-center gap-3">
-          <Clock className="h-4 w-4" />
-          Updated just now • CMU College Cart beta
-        </div>
-      </footer>
     </div>
   );
 }

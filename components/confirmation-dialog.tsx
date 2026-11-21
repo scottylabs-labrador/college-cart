@@ -167,10 +167,7 @@ export default function ConfirmationDialog({ isOpen, onClose, onSend }: Confirma
               </Button>
               <Button
                 type="submit"
-                className="flex-1 border-0 text-white"
-                style={{
-                  background: 'linear-gradient(to right, #4a2db8, #a78bfa)',
-                }}
+                className="flex-1"
               >
                 Send
               </Button>

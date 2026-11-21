@@ -16,7 +16,7 @@ export default async function ChatPage() {
   const conversations = await getConversations(userId);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex-1 bg-background">
       <MainHeader />
       <ChatPageClient
         initialConversations={conversations}

@@ -1,14 +1,11 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
-import Image from "next/image";
 import { getImageUrlsBatch } from "@/lib/image-utils";
-import { isRemoteImageSrc } from "@/lib/storage-image";
 
-import { Card } from "@/components/ui/card";
+import { ListingCard, LISTING_GRID } from "@/components/listing-card";
 import MainHeader from "@/components/main-header";
 import LoadingViewListings from "./loading";
 import posthog from "posthog-js";
@@ -170,62 +167,36 @@ export default function ViewListingsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-white text-slate-900">
+    <div className="flex-1 bg-white text-slate-900">
       <MainHeader />
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 pb-12 pt-10 sm:px-6 lg:px-8">
-        <p className="text-sm text-muted-foreground">
+      <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+        <h1 className="text-3xl font-semibold">
+          {searchTerm ? `Results for \u201c${searchTerm}\u201d` : "All listings"}
+        </h1>
+        <p className="mb-6 mt-2 text-sm text-slate-600">
           {searchTerm
             ? `Showing results for "${searchTerm}".`
             : "Browse every item currently available in CollegeCart."}
         </p>
 
         {errorMessage ? (
-          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+          <div className="rounded-md border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
             Could not load listings. Please refresh the page or try again later.
           </div>
         ) : listings.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+          <div className="rounded-md border border-dashed border-border p-8 text-center text-sm text-slate-600">
             {searchTerm
               ? "No items matched that search. Try a different keyword."
               : "No listings yet. Once sellers post items they will appear here."}
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className={LISTING_GRID}>
             {listings.map((listing) => (
-              <Link
-                key={listing.id}
-                href={listing.href}
-                className="group block transition-transform duration-200 hover:scale-[1.02]"
-                onClick={() => handleListingClick(listing)}
-              >
-                <Card className="overflow-hidden rounded-xl border-0 bg-white shadow-sm">
-                  <div className="relative aspect-square overflow-hidden bg-muted">
-                    <Image
-                      src={listing.imageUrl}
-                      alt={listing.title}
-                      fill
-                      unoptimized={
-                        isRemoteImageSrc(listing.imageUrl) ||
-                        listing.imageUrl.startsWith("data:")
-                      }
-                      sizes="(max-width: 768px) 50vw, 25vw"
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                  </div>
-                  <div className="p-4">
-                    <h3 className="mb-2 line-clamp-2 text-sm font-semibold text-slate-900">
-                      {listing.title}
-                    </h3>
-                    <p className="text-lg font-bold text-[#2f167a]">
-                      {listing.priceFormatted}
-                    </p>
-                  </div>
-                </Card>
-              </Link>
+              <ListingCard key={listing.id} listing={listing} onClick={() => handleListingClick(listing)} />
             ))}
           </div>
         )}
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }
